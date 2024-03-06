@@ -1,0 +1,6 @@
+{
+    "vision_key": "",
+    "vision_endpoint": "",
+    "translator_key": "",
+    "translator_endpoint": "https://api.cognitive.microsofttranslator.com/"
+}
