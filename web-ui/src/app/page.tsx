@@ -1,4 +1,5 @@
 import Image from "next/image";
+import 'react';
 
 export default function Home() {
   return (
