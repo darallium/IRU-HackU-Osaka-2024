@@ -163,6 +163,8 @@ cython_debug/
 # Temporary files
 _*.py
 *.jpg
+translation_cache.json
+user_dictionary.json
 
 # Credentials
 config.json

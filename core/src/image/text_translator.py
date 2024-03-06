@@ -12,32 +12,37 @@ class TextTranslator:
         self.load_dictionary()
 
     def translate(self, text, source_language, target_language):
-        if (source_language, target_language, text) in self.user_dictionary:
-            return self.user_dictionary[(source_language, target_language, text)]
-        elif (source_language, target_language, text) in self.translation_cache:
-            return self.translation_cache[(source_language, target_language, text)]
+        key = f"{source_language}_{target_language}_{text}"
+        if key in self.user_dictionary:
+            print("Using user dictionary.")
+            return self.user_dictionary[key]
+        elif key in self.translation_cache:
+            print("Using translation cache.")
+            return self.translation_cache[key]
 
         input_text_elements = [InputTextItem(text=text)]
 
-        response = self.azure_services.translator_client.translate(content=input_text_elements, to=target_language, from_parameter=source_language)
+        response = self.azure_services.translator_client.translate(content=input_text_elements, to=[target_language], from_parameter=source_language)
         translation = response[0] if response else None
         if translation:
             for translated_text in translation.translations:
                 print(f"Text was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
                 translated_text = translated_text.text
 
-        self.translation_cache[(source_language, target_language, text)] = translated_text
+        self.translation_cache[key] = translated_text
         self.save_cache()
 
         return translated_text
 
     def add_to_dictionary(self, source_language, target_language, text, translation):
-        self.user_dictionary[(source_language, target_language, text)] = translation
+        key = f"{source_language}_{target_language}_{text}"
+        self.user_dictionary[key] = translation
         self.save_dictionary()
 
     def remove_from_dictionary(self, source_language, target_language, text):
-        if (source_language, target_language, text) in self.user_dictionary:
-            del self.user_dictionary[(source_language, target_language, text)]
+        key = f"{source_language}_{target_language}_{text}"
+        if key in self.user_dictionary:
+            del self.user_dictionary[key]
             self.save_dictionary()
 
     def clear_dictionary(self):
