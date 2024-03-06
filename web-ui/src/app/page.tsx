@@ -1,5 +1,4 @@
 import Image from "next/image";
-import * as mui from '@mui/material';
 
 export default function Home() {
   return (
