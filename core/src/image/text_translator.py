@@ -1,4 +1,5 @@
 import json
+import util.logger as logger
 from azure.ai.translation.text.models import InputTextItem
 
 class TextTranslator:
@@ -14,10 +15,10 @@ class TextTranslator:
     def translate(self, text, source_language, target_language):
         key = f"{source_language}_{target_language}_{text}"
         if key in self.user_dictionary:
-            # print("Using user dictionary.")
+            logger.frame("Using user dictionary.")
             return self.user_dictionary[key]
         elif key in self.translation_cache:
-            # print("Using translation cache.")
+            logger.frame("Using translation cache.")
             return self.translation_cache[key]
 
         input_text_elements = [InputTextItem(text=text)]
@@ -26,7 +27,7 @@ class TextTranslator:
         translation = response[0] if response else None
         if translation:
             for translated_text in translation.translations:
-                print(f"Text was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
+                logger.info(f"Text was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
                 translated_text = translated_text.text
 
         self.translation_cache[key] = translated_text

@@ -2,6 +2,7 @@
 from image.azure_services import AzureServices
 from image.image_processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
+import util.logger as logger
 import cv2
 import numpy as np
 import time

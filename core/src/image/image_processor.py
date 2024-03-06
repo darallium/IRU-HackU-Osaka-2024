@@ -4,6 +4,7 @@ import io
 import traceback
 import json
 import time
+import util.logger as logger
 from PIL import Image, ImageFont, ImageDraw
 from image.text_translator import TextTranslator
 
@@ -33,8 +34,8 @@ class ImageProcessor:
             ocr_result = self.azure_services.vision_client.recognize_printed_text_in_stream(image_buffer)
             self.last_ocr_result = ocr_result
             time_end = time.perf_counter()
-            print(f"ocr cost {time_end- self.time_start}s")
-            print(ocr_result)
+            logger.info(f"ocr cost {time_end- self.time_start}s")
+            logger.debug(ocr_result)
         else:
             ocr_result = self.last_ocr_result
 
@@ -42,7 +43,7 @@ class ImageProcessor:
             for line in region.lines:
                 text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
                 left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
-
+                logger.frame(f"Text: {text} ({left}, {top}, {width}, {height})")
                 # 翻訳を実行
                 translated_text = self.text_translator.translate(text, "en", "ja")
 

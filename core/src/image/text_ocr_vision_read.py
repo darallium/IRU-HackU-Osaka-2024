@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 import sys
 import time
 import json
+import util.logger as logger
 
 class TextOcrVisionRead:
     def __init__(self, azure_services):
@@ -22,11 +23,11 @@ class TextOcrVisionRead:
         read_operation_location = read_response.headers["Operation-Location"]
         # Grab the ID from the URL
         operation_id = read_operation_location.split("/")[-1]
-        print(f"operation_id = {operation_id}")
+        logger.info(f"operation_id = {operation_id}")
         # Call the "GET" API and wait for it to retrieve the results 
         while True:
             read_result = self.vision_client.get_read_result(operation_id)
-            print(f"Status: {read_result.status}")
+            logger.debug(f"Status: {read_result.status}")
             if read_result.status not in ['notStarted', 'running']:
                 break
             time.sleep(0.1)
