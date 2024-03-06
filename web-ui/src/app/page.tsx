@@ -1,5 +1,5 @@
 import Image from "next/image";
-import * as mui from '@material-ui/core';
+import * as mui from '@mui/material';
 
 export default function Home() {
   return (
