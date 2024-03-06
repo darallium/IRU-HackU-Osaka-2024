@@ -2,6 +2,7 @@
 from image.azure_services import AzureServices
 from image.image_processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
+import util.logger as logger
 import cv2
 import numpy as np
 import time
@@ -32,15 +33,14 @@ def main():
 
     # audio_processor.start()
 
+    #time.time()
     while True:
-        time_sta = time.perf_counter()
+        time_start = time.perf_counter()
         ret, frame = cap.read()
         if not ret:
             break
 
-        cv2.imwrite("test_output_before.jpg", frame)
         frame = image_processor.process_frame(frame)
-        cv2.imwrite("test_output_after.jpg", frame)
 
         # デバッグのために表示画面のサイズは半分にする
         # 画像の高さと幅を取得
@@ -57,12 +57,8 @@ def main():
             break
 
         time_end = time.perf_counter()
-        print(f"cost {time_end- time_sta}s")
-        # 実際に設定された解像度を取得
-        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        print(f'Width: {width}, Height: {height}')
-        time.sleep(10)
+        time.sleep(1.0 / FPS - (time_end- time_start) / 1000)
+        
 
     cap.release()
     cv2.destroyAllWindows()
