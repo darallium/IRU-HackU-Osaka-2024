@@ -3,6 +3,7 @@ import numpy as np
 import io
 import traceback
 import json
+import time
 from PIL import Image, ImageFont, ImageDraw
 from image.text_translator import TextTranslator
 
@@ -11,8 +12,13 @@ class ImageProcessor:
         self.azure_services = azure_services
         self.text_translator = TextTranslator(self.azure_services)
         self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", 25)
+        self.last_process_frame_time = 0
+        self.last_ocr_result = None
+        
 
     def process_frame(self, frame):
+        self.time_start = time.perf_counter()
+        
         # フレームをPILイメージに変換
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         draw = ImageDraw.Draw(image)
@@ -21,14 +27,22 @@ class ImageProcessor:
         image.save(byte_arr, format='PNG')
         image_binary = byte_arr.getvalue()
         image_buffer = io.BufferedReader(io.BytesIO(image_binary))
-        ocr_result = self.azure_services.vision_client.recognize_printed_text_in_stream(image_buffer)
-        print(ocr_result)
+
+        if self.time_start - self.last_process_frame_time >= 10:
+            self.last_process_frame_time = self.time_start
+            ocr_result = self.azure_services.vision_client.recognize_printed_text_in_stream(image_buffer)
+            self.last_ocr_result = ocr_result
+            time_end = time.perf_counter()
+            print(f"ocr cost {time_end- self.time_start}s")
+            print(ocr_result)
+        else:
+            ocr_result = self.last_ocr_result
+
         for region in ocr_result.regions:
-            print(region)
             for line in region.lines:
                 text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
                 left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
-                print(text, left, top, width, height)
+
                 # 翻訳を実行
                 translated_text = self.text_translator.translate(text, "en", "ja")
 
@@ -48,4 +62,5 @@ class ImageProcessor:
 
         # PILイメージをOpenCVの画像に変換
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
         return frame

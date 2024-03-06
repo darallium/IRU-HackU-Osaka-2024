@@ -14,10 +14,10 @@ class TextTranslator:
     def translate(self, text, source_language, target_language):
         key = f"{source_language}_{target_language}_{text}"
         if key in self.user_dictionary:
-            print("Using user dictionary.")
+            # print("Using user dictionary.")
             return self.user_dictionary[key]
         elif key in self.translation_cache:
-            print("Using translation cache.")
+            # print("Using translation cache.")
             return self.translation_cache[key]
 
         input_text_elements = [InputTextItem(text=text)]
