@@ -15,7 +15,7 @@ class TextOcrVisionRead:
     def __init__(self, azure_services):
         self.vision_client = azure_services.vision_client
 
-    def read_async(self, image_stream):
+    def run_async(self, image_stream):
         read_response = self.vision_client.read_in_stream(image_stream, raw=True)
 
         print(read_response)

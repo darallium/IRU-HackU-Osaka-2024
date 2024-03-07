@@ -2,11 +2,13 @@
 from image.azure_services import AzureServices
 from image.image_processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
+from image.text_ocr.vision_ocr import TextOcrVisionOcr
 import util.logger as logger
 import cv2
 import numpy as np
 import time
 import json
+import asyncio
 
 def main():
 
@@ -20,7 +22,7 @@ def main():
         config['translator_endpoint']
     )
 
-    image_processor = ImageProcessor(azure_services)
+    image_processor = ImageProcessor(azure_services, TextOcrVisionOcr)
     # audio_processor = AudioProcessor()
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
