@@ -16,7 +16,6 @@ certifi==2024.2.2
 cffi==1.16.0
 charset-normalizer==3.3.2
 colorama==0.4.6
-core @ file:///D:/workspace/2024/hackathon/test/core
 cryptography==42.0.5
 google-api-core==2.17.1
 google-auth==2.28.1
