@@ -65,3 +65,15 @@ class ImageProcessor:
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         return frame
+    
+    # 画像をリサイズ 黒帯もやるよ
+    def resize_image(self, image, dist):
+        ratio = min(dist[0] / image.size[0], dist[1] / image.size[1])
+
+        resized_image = image.resize(new_size, Image.ANTIALIAS)
+        new_image = Image.new('RGB', dist, (0, 0, 0))
+        new_image.paste(resized_image, ((dist[0] - new_size[0]) // 2, (dist[1] - new_size[1]) // 2))
+
+        return new_image
+
+
