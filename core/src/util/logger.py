@@ -28,7 +28,7 @@ class Logger:
         self.logger = logging.getLogger()
         self.logger.setLevel(self.log_level)
         date = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-        fh = logging.FileHandler(filename=f'{self.log_dir}/{date}.log')
+        fh = logging.FileHandler(filename=f'{self.log_dir}/{date}.log', encoding='utf-8')
         formatter = logging.Formatter(self.log_format)
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
