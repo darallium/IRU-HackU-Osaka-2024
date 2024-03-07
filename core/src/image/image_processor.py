@@ -28,7 +28,7 @@ class ImageProcessor:
             loop.run_forever()
 
     async def recognize_text(self, image_buffer):
-        return await self.ocr_instance.run_async(image_buffer)
+        return await self.ocr_instance.run(image_buffer)
     
     def process_frame(self, frame):
         self.time_start = time.perf_counter()
@@ -64,27 +64,33 @@ class ImageProcessor:
         if ocr_result is None:
             return frame
         
-        for region in ocr_result.regions:
-            for line in region.lines:
-                text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
-                left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
-                logger.frame(f"Text: {text} ({left}, {top}, {width}, {height})")
-                # 翻訳を実行
-                translated_text = self.text_translator.translate(text, "en", "ja")
+        if ocr_result['analyzeResult']:
+            for read_results in ocr_result['analyzeResult']['readResults']:
+                for line in read_results['lines']:
+                    print(f"Text: {line['text']}")
+                    print(f"BoundingBox: {line['boundingBox']}")
+        else:
+            for region in ocr_result.regions:
+                for line in region.lines:
+                    text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
+                    left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
+                    logger.frame(f"Text: {text} ({left}, {top}, {width}, {height})")
+                    # 翻訳を実行
+                    translated_text = self.text_translator.translate(text, "en", "ja")
 
-                # 翻訳したテキストを画像に描画
-                bbox = draw.textbbox((left, top), translated_text, font=self.font)
-                # 半透明の背景を作成
-                overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
-                draw_overlay = ImageDraw.Draw(overlay)
-                draw_overlay.rectangle([(left, top), (left + bbox[2] - bbox[0], top + bbox[3] - bbox[1])], fill=(0, 220, 255, 100))
+                    # 翻訳したテキストを画像に描画
+                    bbox = draw.textbbox((left, top), translated_text, font=self.font)
+                    # 半透明の背景を作成
+                    overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
+                    draw_overlay = ImageDraw.Draw(overlay)
+                    draw_overlay.rectangle([(left, top), (left + bbox[2] - bbox[0], top + bbox[3] - bbox[1])], fill=(0, 220, 255, 100))
 
-                # 半透明の背景を元の画像に合成
-                image = Image.alpha_composite(image.convert('RGBA'), overlay)
+                    # 半透明の背景を元の画像に合成
+                    image = Image.alpha_composite(image.convert('RGBA'), overlay)
 
-                draw = ImageDraw.Draw(image)
-                
-                draw.text((left, top), translated_text, font=self.font, fill=(255, 255, 255))
+                    draw = ImageDraw.Draw(image)
+                    
+                    draw.text((left, top), translated_text, font=self.font, fill=(255, 255, 255))
 
         # PILイメージをOpenCVの画像に変換
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
