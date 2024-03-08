@@ -14,7 +14,7 @@ class ImageProcessor:
     def __init__(self, azure_services, ocr_class):
         self.azure_services = azure_services
         self.text_translator = TextTranslator(self.azure_services)
-        self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", 25)
+        self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", 50)
         self.last_process_frame_time = 0
         self.last_ocr_result = None
         self.ocr_instance = ocr_class(self.azure_services)
@@ -38,7 +38,7 @@ class ImageProcessor:
 
         # 480pに縮小して画像をAzureのOCRサービスに送信
         compressed_image, ratio, _ = self.resize_image(image, (640, 480))
-        logger.debug(f"image size: {ratio}")
+        logger.frame(f"image size: {ratio}")
 
         draw = ImageDraw.Draw(image)
         # PILイメージをバイト配列に変換
@@ -71,9 +71,52 @@ class ImageProcessor:
         
         if ocr_result['readResults']:
             for read_results in ocr_result['readResults']:
+                angle = read_results['angle']
                 for line in read_results['lines']:
-                    print(f"Text: {line['text']}")
-                    print(f"BoundingBox: {line['boundingBox']}") #'boundingBox': [1165, 946, 1330, 946, 1330, 1018, 1165, 1018]
+                    text = line['text']  # テキストを取得
+                    boundingBox = [int(i) for i in line['boundingBox']]  # バウンディングボックスを取得
+                    pts1 = np.float32([[boundingBox[i] / ratio, boundingBox[i+1] / ratio] for i in range(0,8,2)])  # バウンディングボックスから座標を取得
+                    width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
+                    height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
+                    self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", height)
+                    # 翻訳を実行
+                    translated_text = self.text_translator.translate(text, "en", "ja")
+
+                    # フォントサイズを最適化
+                    img_dummy = Image.new('RGBA', (1, 1))
+                    d_dummy = ImageDraw.Draw(img_dummy)
+                    bbox = d_dummy.textbbox((0, 0), translated_text, font=self.font)
+                    if bbox[2] > width:
+                        low, high = 1, height
+                        while low <= high:
+                            mid = (low + high) // 2
+                            self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", mid)
+                            bbox = d_dummy.textbbox((0, 0), translated_text, font=self.font)
+                            if bbox[2] <= width:
+                                low = mid + 1
+                            else:
+                                high = mid - 1
+
+
+
+                    # 翻訳したテキストを半透明の背景を持つバッファに描画
+                    img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, 100))
+                    d = ImageDraw.Draw(img)
+                    d.text((0,0), translated_text, font=self.font, fill=(255, 255, 255, 255))
+                    img = np.array(img)
+
+                    # 射影変換を用いてバッファを元の画像に描画
+                    pts2 = np.float32([[0,0],[width,0],[width,height],[0,height]])
+                    M = cv2.getPerspectiveTransform(pts2, pts1)
+                    dst = cv2.warpPerspective(img, M, (frame.shape[1], frame.shape[0]))
+                    
+                    # 元の画像とdstを合成
+                    frame = Image.fromarray(frame)
+                    dst = Image.fromarray(dst)
+                    frame = Image.alpha_composite(frame.convert('RGBA'), dst)
+
+                    # 戻り値をnumpy arrayに変換
+                    frame = np.array(frame)
         else:
             for region in ocr_result.regions:
                 for line in region.lines:
@@ -81,10 +124,10 @@ class ImageProcessor:
                     left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
                     nl, nt, nw, nh = [int(value / ratio) for value in [left, top, width, height]]
                     logger.frame(f"Text: {text} ({left}, {top}, {width}, {height})")
+                    logger.frame(f"ratio: {left}, {top}->{nl}, {nt}")
                     # 翻訳を実行
                     translated_text = self.text_translator.translate(text, "en", "ja")
-                    
-                    logger.debug(f"ratio: {left}, {top}->{nl}, {nt}")
+
                     # 翻訳したテキストを画像に描画
                     bbox = draw.textbbox((nl, nt), translated_text, font=self.font)
                     # 半透明の背景を作成
@@ -99,8 +142,8 @@ class ImageProcessor:
                     
                     draw.text((nl, nt), translated_text, font=self.font, fill=(255, 255, 255))
 
-        # PILイメージをOpenCVの画像に変換
-        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                    # PILイメージをOpenCVの画像に変換
+                    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         return frame
     

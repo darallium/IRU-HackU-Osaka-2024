@@ -1,6 +1,6 @@
 # main.py
 from image.azure_services import AzureServices
-from core.src.image.processor import ImageProcessor
+from image.processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
 
 from image.text_ocr.vision_ocr import TextOcrVisionOcr
