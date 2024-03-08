@@ -30,10 +30,10 @@ def main():
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     width = 1920
     height = 1080
-    FPS = 30
+    FPS = 60
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    #capture.set(cv2.CAP_PROP_FPS, FPS)
+    cap.set(cv2.CAP_PROP_FPS, FPS)
 
     # audio_processor.start()
 
@@ -61,7 +61,7 @@ def main():
             break
 
         time_end = time.perf_counter()
-        time.sleep(1.0 / FPS - (time_end- time_start) / 1000)
+        time.sleep(max(1.0 / FPS - (time_end- time_start) / 1000, 0.0))
         
 
     cap.release()

@@ -8,13 +8,12 @@ import asyncio
 import threading
 import util.logger as logger
 from PIL import Image, ImageFont, ImageDraw
-from image.text_translator import TextTranslator
+from image.overlay_text import OverlayText
 
 class ImageProcessor:
-    def __init__(self, azure_services, ocr_class):
+    def __init__(self, azure_services, ocr_class, enable_resize=False):
         self.azure_services = azure_services
-        self.text_translator = TextTranslator(self.azure_services)
-        self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", 50)
+        self.overlay_text = OverlayText(self.azure_services)
         self.last_process_frame_time = 0
         self.last_ocr_result = None
         self.ocr_instance = ocr_class(self.azure_services)
@@ -22,6 +21,7 @@ class ImageProcessor:
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
         self.thread.start()
+        self.enable_resize = enable_resize
 
     def start_loop(self, loop):
             asyncio.set_event_loop(loop)
@@ -37,13 +37,14 @@ class ImageProcessor:
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         # 480pに縮小して画像をAzureのOCRサービスに送信
-        compressed_image, ratio, _ = self.resize_image(image, (640, 480))
-        logger.frame(f"image size: {ratio}")
+        ratio = 1.0
+        if self.enable_resize:
+            image, ratio, _ = self.resize_image(image, (640, 480))
+            logger.frame(f"image size: {ratio}")
 
-        draw = ImageDraw.Draw(image)
         # PILイメージをバイト配列に変換
         byte_arr = io.BytesIO()
-        compressed_image.save(byte_arr, format='PNG')
+        image.save(byte_arr, format='PNG')
         image_binary = byte_arr.getvalue()
         image_buffer = io.BufferedReader(io.BytesIO(image_binary))
 
@@ -66,84 +67,8 @@ class ImageProcessor:
         else:
             ocr_result = self.last_ocr_result
 
-        if ocr_result is None:
-            return frame
-        
-        if ocr_result['readResults']:
-            for read_results in ocr_result['readResults']:
-                angle = read_results['angle']
-                for line in read_results['lines']:
-                    text = line['text']  # テキストを取得
-                    boundingBox = [int(i) for i in line['boundingBox']]  # バウンディングボックスを取得
-                    pts1 = np.float32([[boundingBox[i] / ratio, boundingBox[i+1] / ratio] for i in range(0,8,2)])  # バウンディングボックスから座標を取得
-                    width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
-                    height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
-                    self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", height)
-                    # 翻訳を実行
-                    translated_text = self.text_translator.translate(text, "en", "ja")
-
-                    # フォントサイズを最適化
-                    img_dummy = Image.new('RGBA', (1, 1))
-                    d_dummy = ImageDraw.Draw(img_dummy)
-                    bbox = d_dummy.textbbox((0, 0), translated_text, font=self.font)
-                    if bbox[2] > width:
-                        low, high = 1, height
-                        while low <= high:
-                            mid = (low + high) // 2
-                            self.font = ImageFont.truetype("C:\\Windows\\Fonts\\msgothic.ttc", mid)
-                            bbox = d_dummy.textbbox((0, 0), translated_text, font=self.font)
-                            if bbox[2] <= width:
-                                low = mid + 1
-                            else:
-                                high = mid - 1
-
-
-
-                    # 翻訳したテキストを半透明の背景を持つバッファに描画
-                    img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, 100))
-                    d = ImageDraw.Draw(img)
-                    d.text((0,0), translated_text, font=self.font, fill=(255, 255, 255, 255))
-                    img = np.array(img)
-
-                    # 射影変換を用いてバッファを元の画像に描画
-                    pts2 = np.float32([[0,0],[width,0],[width,height],[0,height]])
-                    M = cv2.getPerspectiveTransform(pts2, pts1)
-                    dst = cv2.warpPerspective(img, M, (frame.shape[1], frame.shape[0]))
-                    
-                    # 元の画像とdstを合成
-                    frame = Image.fromarray(frame)
-                    dst = Image.fromarray(dst)
-                    frame = Image.alpha_composite(frame.convert('RGBA'), dst)
-
-                    # 戻り値をnumpy arrayに変換
-                    frame = np.array(frame)
-        else:
-            for region in ocr_result.regions:
-                for line in region.lines:
-                    text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
-                    left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
-                    nl, nt, nw, nh = [int(value / ratio) for value in [left, top, width, height]]
-                    logger.frame(f"Text: {text} ({left}, {top}, {width}, {height})")
-                    logger.frame(f"ratio: {left}, {top}->{nl}, {nt}")
-                    # 翻訳を実行
-                    translated_text = self.text_translator.translate(text, "en", "ja")
-
-                    # 翻訳したテキストを画像に描画
-                    bbox = draw.textbbox((nl, nt), translated_text, font=self.font)
-                    # 半透明の背景を作成
-                    overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
-                    draw_overlay = ImageDraw.Draw(overlay)
-                    draw_overlay.rectangle([(nl, nt), (nl+ bbox[2] - bbox[0], nt + bbox[3] - bbox[1])], fill=(0, 220, 255, 100))
-
-                    # 半透明の背景を元の画像に合成
-                    image = Image.alpha_composite(image.convert('RGBA'), overlay)
-
-                    draw = ImageDraw.Draw(image)
-                    
-                    draw.text((nl, nt), translated_text, font=self.font, fill=(255, 255, 255))
-
-                    # PILイメージをOpenCVの画像に変換
-                    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        if ocr_result:
+            frame = self.overlay_text.draw_text(frame, ratio, ocr_result)
 
         return frame
     
