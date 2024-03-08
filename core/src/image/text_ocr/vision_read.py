@@ -24,14 +24,14 @@ class TextOcrVisionRead:
         logger.info(f"ocr operation_id {operation_id}")
 
         while True:
-            read_result = self.azure_services.vision_client.get_read_result(operation_id, raw=True).response.json()
-            logger.debug(f"ocr operation status: {read_result["status"]}")
-            if read_result["status"] not in ['notStarted', 'running']:
+            read_result = self.azure_services.vision_client.get_read_result(operation_id)
+            logger.debug(f"ocr operation status: {read_result.status}")
+            if read_result.status not in ['notStarted', 'running']:
                 break
             time.sleep(0.3)
 
         # Print the detected text, line by line
-        if read_result["status"] == OperationStatusCodes.succeeded:
+        if read_result.status == OperationStatusCodes.succeeded:
             pass
 
-        return read_result["analyzeResult"]
+        return read_result

@@ -24,7 +24,7 @@ def main():
         config['translator_endpoint']
     )
 
-    image_processor = ImageProcessor(azure_services, TextOcrVisionRead, enable_resize=True)
+    image_processor = ImageProcessor(azure_services, TextOcrVisionOcr, enable_resize=False)
     # audio_processor = AudioProcessor()
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
