@@ -64,11 +64,11 @@ class ImageProcessor:
         if ocr_result is None:
             return frame
         
-        if ocr_result['analyzeResult']:
-            for read_results in ocr_result['analyzeResult']['readResults']:
+        if ocr_result['readResults']:
+            for read_results in ocr_result['readResults']:
                 for line in read_results['lines']:
                     print(f"Text: {line['text']}")
-                    print(f"BoundingBox: {line['boundingBox']}")
+                    print(f"BoundingBox: {line['boundingBox']}") #'boundingBox': [1165, 946, 1330, 946, 1330, 1018, 1165, 1018]
         else:
             for region in ocr_result.regions:
                 for line in region.lines:
