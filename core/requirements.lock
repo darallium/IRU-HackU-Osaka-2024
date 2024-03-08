@@ -181,3 +181,5 @@ typing-extensions==4.10.0
     # via pydash
 urllib3==2.2.1
     # via requests
+watchdog==4.0.0
+    # via core

@@ -1,35 +1,79 @@
 import json
 import os
-import util.logger as logger
+import src.util.logger as logger
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import threading
+
+
+# FileSystemEventHandlerを継承したクラス
+class ConfigHandler(FileSystemEventHandler):
+    def __init__(self, config):
+        self.config = config
+
+    def on_modified(self, event):
+        self.config.reload_config()
+        threading.Thread(target=self.config.watch_config).start()
+
 
 class Config:
-    def __init__(self, config_file='config.json'):
-        self.config_file = config_file
+    _instance = None
+
+    # シングルトン
+    def __new__(cls, path="config.json"):
+        if cls._instance is None:
+            cls._instance = super(Config, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, path="config.json"):
+        self.path = path
         self.config = {}
-        self.default_config = {
-            'vision_key': 'default_vision_key',
-            'vision_endpoint': 'default_vision_endpoint',
-            'translator_key': 'default_translator_key',
-            'translator_endpoint': 'default_translator_endpoint'
-        }
+        self.event_handler = None
         self.load_config()
+        self.observer = Observer()
+        self.observer.schedule(self.event_handler, os.path.dirname(self.path))
+        self.observer.start()
 
     def load_config(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
+        self.config = {}
+        if os.path.exists(self.path):
+            with open(self.path, "r") as f:
                 self.config = json.load(f)
-            self.validate_config()
         else:
-            self.config = self.default_config
-            self.save_config()
+            logger.error("Config file not found")
 
-    def validate_config(self):
-        for key, value in self.default_config.items():
-            if key not in self.config or type(self.config[key]) != type(value):
-                print(f"Invalid config key: {key}. Using default value ;)")
-                self.config[key] = value
-        self.save_config()
+        self.event_handler = ConfigHandler(self)
+        self.observer = Observer()
+        self.observer.schedule(self.event_handler, os.path.dirname(self.path))
+        self.observer.start()
 
-    def save_config(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self.config, f)
+    def write_config(self):
+        with open(self.path, "w") as f:
+            json.dump(self.config, f, indent=4)
+
+    def get_value(self, key, ifnull):
+        if self.is_file_changed():
+            self.load_config()
+        if key in self.config:
+            return self.config[key]
+        else:
+            return ifnull
+
+    def set_value(self, key, value):
+        if self.is_file_changed():
+            self.load_config()
+        self.config[key] = value
+        self.write_config()
+
+    def watch_config(self):
+        self.observer.stop()
+        self.observer.join()
+
+    def stop_watch(self):
+        self.observer.stop()
+        self.observer.join()
+
+    def is_file_changed(self):
+        return self.observer.event_queue is not None
+
+
