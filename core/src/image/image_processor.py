@@ -37,7 +37,7 @@ class ImageProcessor:
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         # 480pに縮小して画像をAzureのOCRサービスに送信
-        compressed_image, ratio = self.resize_image(image, (640, 480))
+        compressed_image, ratio, _ = self.resize_image(image, (640, 480))
         logger.debug(f"image size: {ratio}")
 
         draw = ImageDraw.Draw(image)
@@ -104,20 +104,14 @@ class ImageProcessor:
 
         return frame
     
-    # 画像をリサイズ 黒帯もやるよ
-    def resize_image_with_tie(self, image, dist):
-        ratio = min(dist[0] / image.size[0], dist[1] / image.size[1])
-
-        resized_image = image.resize(new_size, Image.ANTIALIAS)
-        new_image = Image.new('RGB', dist, (0, 0, 0))
-        new_image.paste(resized_image, ((dist[0] - new_size[0]) // 2, (dist[1] - new_size[1]) // 2))
-
-        return new_image
-
     def resize_image(self, image, dist):
         ratio = min(dist[0] / image.size[0], dist[1] / image.size[1])
         new_size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
         resized_image = image.resize(new_size, Image.LANCZOS)
-        return resized_image, ratio 
+        return resized_image, ratio, new_size
 
-
+    def resize_image_with_tie(self, image, dist):
+        resized_image, _, new_size = self.resize_image(image, dist)
+        new_image = Image.new('RGB', dist, (0, 0, 0))
+        new_image.paste(resized_image, ((dist[0] - new_size[0]) // 2, (dist[1] - new_size[1]) // 2))
+        return new_image
