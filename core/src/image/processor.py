@@ -33,20 +33,18 @@ class ImageProcessor:
     def process_frame(self, frame):
         self.time_start = time.perf_counter()
         
-        # フレームをPILイメージに変換
-        image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
         # 480pに縮小して画像をAzureのOCRサービスに送信
         ratio = 1.0
         if self.enable_resize:
-            image, ratio, _ = self.resize_image(image, (640, 480))
+            resized_frame, ratio, _ = self.resize_image(frame, (640, 480))
             logger.frame(f"image size: {ratio}")
+        else:
+            resized_frame = frame
 
-        # PILイメージをバイト配列に変換
-        byte_arr = io.BytesIO()
-        image.save(byte_arr, format='PNG')
-        image_binary = byte_arr.getvalue()
-        image_buffer = io.BufferedReader(io.BytesIO(image_binary))
+        # PNG形式に変換
+        _, buffer = cv2.imencode(".png", resized_frame)
+
+        image_buffer = io.BufferedReader(io.BytesIO(buffer))
 
         if self.time_start - self.last_process_frame_time >= 10:
             if self.ocr_task is not None:
@@ -73,13 +71,14 @@ class ImageProcessor:
         return frame
     
     def resize_image(self, image, dist):
-        ratio = min(dist[0] / image.size[0], dist[1] / image.size[1])
-        new_size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
-        resized_image = image.resize(new_size, Image.LANCZOS)
+        ratio = min(dist[0] / image.shape[1], dist[1] / image.shape[0])
+        new_size = (int(image.shape[1] * ratio), int(image.shape[0] * ratio))
+        resized_image = cv2.resize(image, new_size, interpolation = cv2.INTER_LANCZOS4)
         return resized_image, ratio, new_size
 
     def resize_image_with_tie(self, image, dist):
         resized_image, _, new_size = self.resize_image(image, dist)
-        new_image = Image.new('RGB', dist, (0, 0, 0))
-        new_image.paste(resized_image, ((dist[0] - new_size[0]) // 2, (dist[1] - new_size[1]) // 2))
+        new_image = np.zeros((dist[1], dist[0], 3), np.uint8)
+        new_image[(dist[1] - new_size[1]) // 2 : (dist[1] - new_size[1]) // 2 + new_size[1], 
+                  (dist[0] - new_size[0]) // 2 : (dist[0] - new_size[0]) // 2 + new_size[0]] = resized_image
         return new_image
