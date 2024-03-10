@@ -11,9 +11,10 @@ from PIL import Image, ImageFont, ImageDraw
 from image.overlay_text import OverlayText
 
 class ImageProcessor:
-    def __init__(self, azure_services, ocr_class, enable_resize=False):
+    def __init__(self, azure_services, ocr_class, enable_resize=False, ocr_interval=10):
         self.azure_services = azure_services
         self.overlay_text = OverlayText(self.azure_services)
+        self.ocr_interval = ocr_interval
         self.last_process_frame_time = 0
         self.last_ocr_result = None
         self.ocr_instance = ocr_class(self.azure_services)
@@ -46,7 +47,7 @@ class ImageProcessor:
 
         image_buffer = io.BufferedReader(io.BytesIO(buffer))
 
-        if self.time_start - self.last_process_frame_time >= 10:
+        if self.time_start - self.last_process_frame_time >= self.ocr_interval:
             if self.ocr_task is not None:
                 logger.warning("old ocr task is not finished yet and will be canceled")
                 self.ocr_task.cancel()

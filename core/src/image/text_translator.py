@@ -3,17 +3,18 @@ import util.logger as logger
 from azure.ai.translation.text.models import InputTextItem
 
 class TextTranslator:
-    def __init__(self, azure_services):
+    def __init__(self, azure_services, target_language="ja"):
         self.azure_services = azure_services
         self.translation_cache = {}
         self.user_dictionary = {}
         self.cache_file = "translation_cache.json"
         self.dictionary_file = "user_dictionary.json"
+        self.target_language = target_language
         self.load_cache()
         self.load_dictionary()
 
-    def translate(self, text, source_language, target_language):
-        key = f"{source_language}_{target_language}_{text}"
+    def translate(self, text, source_language):
+        key = f"{source_language}_{self.target_language}_{text}"
         if key in self.user_dictionary:
             logger.frame("Using user dictionary.")
             return self.user_dictionary[key]
@@ -23,11 +24,11 @@ class TextTranslator:
 
         input_text_elements = [InputTextItem(text=text)]
 
-        response = self.azure_services.translator_client.translate(content=input_text_elements, to=[target_language], from_parameter=source_language)
+        response = self.azure_services.translator_client.translate(content=input_text_elements, to=[self.target_language], from_parameter=source_language)
         translation = response[0] if response else None
         if translation:
             for translated_text in translation.translations:
-                logger.info(f"Text was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
+                logger.info(f"'{text}' was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
                 translated_text = translated_text.text
 
         self.translation_cache[key] = translated_text

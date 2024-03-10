@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import util.logger as logger
+import util.config as config
 from image.text_translator import TextTranslator
 from PIL import Image, ImageDraw, ImageFont
 
@@ -8,7 +9,7 @@ class OverlayText:
     def __init__(self, azure_services, font_path="C:\\Windows\\Fonts\\msgothic.ttc"):
         self.azure_services = azure_services
         self.text_translator = TextTranslator(self.azure_services)
-        self.font_path = font_path
+        self.font_path = config.value_of("font_path") 
         self.last_ocr_result = None
         self.text_image_buffer = None
 
@@ -52,7 +53,7 @@ class OverlayText:
                         left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
                         nl, nt, nw, nh = [int(value / ratio) for value in [left, top, width, height]]
                         # 翻訳を実行
-                        translated_text = self.text_translator.translate(text, "en", "ja")
+                        translated_text = self.text_translator.translate(text, ocr_result.language)
 
                         font = self.get_optimum_sized_font(translated_text, nw, nh)
 
