@@ -7,6 +7,7 @@ default_config = {
     "log_level": "DEBUG",
     "target_language": "ja",
     "ocr_interval": 10,
+    "ocr_read_operation_check_interval": 0.3,
     "enable_datasaver": False, #resize
     "debug_mode": False, #画面をフルスクリーンじゃなくて半分サイズのウィンドで表示
     "font_path": "C:\\Windows\\Fonts\\msgothic.ttc",

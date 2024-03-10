@@ -6,7 +6,7 @@ from image.text_translator import TextTranslator
 from PIL import Image, ImageDraw, ImageFont
 
 class OverlayText:
-    def __init__(self, azure_services, font_path="C:\\Windows\\Fonts\\msgothic.ttc"):
+    def __init__(self, azure_services):
         self.azure_services = azure_services
         self.text_translator = TextTranslator(self.azure_services)
         self.font_path = config.value_of("font_path") 

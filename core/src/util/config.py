@@ -4,7 +4,7 @@ import threading
 import time
 import util.logger as logger
 from util.default_config import default_config
-
+from util.default_config_linux import default_config_linux
 class Config:
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -16,6 +16,7 @@ class Config:
         self.config_file = config_file
         self.config = {}
         self.default_config = default_config
+        self.default_config_linux = default_config_linux
         self.load_config()
         self.last_modified = os.path.getmtime(self.config_file)
         self.check_config_updates()
@@ -27,7 +28,11 @@ class Config:
             self.validate_config()
         else:
             logger.warning("Config file not found. Using default config.")
-            self.config = self.default_config
+            if os.name == 'nt':
+                self.config = self.default_config
+            else:
+                self.config = {**self.default_config, **self.default_config_linux}
+
             self.save_config()
 
     def validate_config(self):
