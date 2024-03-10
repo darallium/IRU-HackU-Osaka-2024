@@ -3,9 +3,6 @@ from image.azure_services import AzureServices
 from image.processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
 
-from image.text_ocr.vision_ocr import TextOcrVisionOcr
-from image.text_ocr.vision_read import TextOcrVisionRead
-
 import util.config as config
 import util.logger as logger
 import cv2
@@ -22,13 +19,8 @@ def main():
         config.value_of('translator_key'),
         config.value_of('translator_endpoint')
     )
-    
-    if config.value_of("ocr_method") == "vision_read":
-        ocr_method = TextOcrVisionRead
-    elif config.value_of("ocr_method") == "vision_ocr":
-        ocr_method = TextOcrVisionOcr
 
-    image_processor = ImageProcessor(azure_services, ocr_method)
+    image_processor = ImageProcessor(azure_services)
     # audio_processor = AudioProcessor()
     cap = cv2.VideoCapture(config.value_of("camera_device_id"))
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))

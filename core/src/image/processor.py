@@ -10,14 +10,17 @@ import util.logger as logger
 import util.config as config
 from PIL import Image, ImageFont, ImageDraw
 from image.overlay_text import OverlayText
+from image.text_ocr.vision_ocr import TextOcrVisionOcr
+from image.text_ocr.vision_read import TextOcrVisionRead
 
 class ImageProcessor:
-    def __init__(self, azure_services, ocr_class):
+    def __init__(self, azure_services):
         self.azure_services = azure_services
         self.overlay_text = OverlayText(self.azure_services)
         self.last_process_frame_time = 0
         self.last_ocr_result = None
-        self.ocr_instance = ocr_class(self.azure_services)
+        self.text_ocr_vision_ocr = TextOcrVisionOcr(self.azure_services)
+        self.text_ocr_vision_read = TextOcrVisionRead(self.azure_services)
         self.ocr_task = None
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
@@ -28,7 +31,11 @@ class ImageProcessor:
             loop.run_forever()
 
     async def recognize_text(self, image_buffer):
-        return await self.ocr_instance.run(image_buffer)
+        if config.value_of("ocr_method") == "vision_read":
+            ocr_instance  = self.text_ocr_vision_read
+        elif config.value_of("ocr_method") == "vision_ocr":
+            ocr_instance  = self.text_ocr_vision_ocr
+        return await ocr_instance.run(image_buffer)
     
     def process_frame(self, frame):
         self.time_start = time.perf_counter()
