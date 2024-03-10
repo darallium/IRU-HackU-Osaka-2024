@@ -44,7 +44,7 @@ class Config:
     
     def save_config(self):
         with open(self.config_file, 'w') as f:
-            json.dump(self.config, f)
+            json.dump(self.config, f, indent=4)
 
     def check_config_updates(self):
         def target():
