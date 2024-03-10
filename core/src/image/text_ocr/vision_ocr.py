@@ -5,5 +5,3 @@ class TextOcrVisionOcr:
     async def run(self, image_stream):
         read_response = self.azure_services.vision_client.recognize_printed_text_in_stream(image_stream)
         return read_response
-
-        

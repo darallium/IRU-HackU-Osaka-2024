@@ -82,3 +82,4 @@ class ImageProcessor:
         new_image[(dist[1] - new_size[1]) // 2 : (dist[1] - new_size[1]) // 2 + new_size[1], 
                   (dist[0] - new_size[0]) // 2 : (dist[0] - new_size[0]) // 2 + new_size[0]] = resized_image
         return new_image
+    
