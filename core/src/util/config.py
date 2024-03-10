@@ -3,7 +3,7 @@ import os
 import threading
 import time
 import util.logger as logger
-from util.default_config import default_config
+from util.default_config import default_config, valid_values
 from util.default_config_linux import default_config_linux
 class Config:
     _instance = None
@@ -15,6 +15,7 @@ class Config:
     def __init__(self, config_file='config.json'):
         self.config_file = config_file
         self.config = {}
+        self.valid_values = valid_values
         self.default_config = default_config
         self.default_config_linux = default_config_linux
         self.load_config()
@@ -40,6 +41,9 @@ class Config:
             if key not in self.config or type(self.config[key]) != type(value):
                 logger.warning(f"Invalid config key: {key}. Using default value ;)")
                 self.config[key] = value
+            elif key in self.valid_values and self.config[key] not in self.valid_values[key]:
+                logger.warning(f"Invalid value for {key}: {self.config[key]}. Using default value ;)")
+                self.config[key] = value
         self.save_config()
     
     def save_config(self):
@@ -59,7 +63,6 @@ class Config:
         thread.start()
 
 config = Config()
-
 
 def value_of(key):
     return config.config[key]

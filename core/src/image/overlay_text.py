@@ -28,7 +28,7 @@ class OverlayText:
                         height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
                         
                         # 翻訳を実行
-                        translated_text = self.text_translator.translate(text, "en", "ja")
+                        translated_text = self.text_translator.translate(text, ocr_result.language)
 
                         font = self.get_optimum_sized_font(translated_text, width, height)
 
