@@ -2,7 +2,6 @@ import json
 import os
 import threading
 import time
-import util.logger as logger
 from util.default_config import default_config, valid_values
 from util.default_config_linux import default_config_linux
 class Config:
@@ -28,7 +27,7 @@ class Config:
                 self.config = json.load(f)
             self.validate_config()
         else:
-            logger.warning("Config file not found. Using default config.")
+            print("Config file not found. Using default config.")
             if os.name == 'nt':
                 self.config = self.default_config
             else:
@@ -39,10 +38,10 @@ class Config:
     def validate_config(self):
         for key, value in self.default_config.items():
             if key not in self.config or type(self.config[key]) != type(value):
-                logger.warning(f"Invalid config key: {key}. Using default value ;)")
+                print(f"Invalid config key: {key}. Using default value ;)")
                 self.config[key] = value
             elif key in self.valid_values and self.config[key] not in self.valid_values[key]:
-                logger.warning(f"Invalid value for {key}: {self.config[key]}. Using default value ;)")
+                print(f"Invalid value for {key}: {self.config[key]}. Using default value ;)")
                 self.config[key] = value
         self.save_config()
     
@@ -55,7 +54,7 @@ class Config:
             while True:
                 time.sleep(1)
                 if os.path.getmtime(self.config_file) != self.last_modified:
-                    logger.info("Config file updated. Reloading...")
+                    print("Config file updated. Reloading...")
                     self.last_modified = os.path.getmtime(self.config_file)
                     self.load_config()
 

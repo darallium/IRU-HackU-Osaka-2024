@@ -1,19 +1,21 @@
 import json
 import util.logger as logger
+import util.config as config
 from azure.ai.translation.text.models import InputTextItem
 
 class TextTranslator:
-    def __init__(self, azure_services, target_language="ja"):
+    def __init__(self, azure_services):
         self.azure_services = azure_services
         self.translation_cache = {}
         self.user_dictionary = {}
         self.cache_file = "translation_cache.json"
         self.dictionary_file = "user_dictionary.json"
-        self.target_language = target_language
+        self.target_language = config.value_of("target_language")
         self.load_cache()
         self.load_dictionary()
 
     def translate(self, text, source_language):
+        self.target_language = config.value_of("target_language")
         key = f"{source_language}_{self.target_language}_{text}"
         if key in self.user_dictionary:
             logger.frame("Using user dictionary.")
@@ -36,13 +38,13 @@ class TextTranslator:
 
         return translated_text
 
-    def add_to_dictionary(self, source_language, target_language, text, translation):
-        key = f"{source_language}_{target_language}_{text}"
+    def add_to_dictionary(self, source_language, text, translation):
+        key = f"{source_language}_{self.target_language}_{text}"
         self.user_dictionary[key] = translation
         self.save_dictionary()
 
-    def remove_from_dictionary(self, source_language, target_language, text):
-        key = f"{source_language}_{target_language}_{text}"
+    def remove_from_dictionary(self, source_language, text):
+        key = f"{source_language}_{self.target_language}_{text}"
         if key in self.user_dictionary:
             del self.user_dictionary[key]
             self.save_dictionary()

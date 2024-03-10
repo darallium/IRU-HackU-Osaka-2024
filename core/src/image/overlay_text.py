@@ -9,11 +9,11 @@ class OverlayText:
     def __init__(self, azure_services):
         self.azure_services = azure_services
         self.text_translator = TextTranslator(self.azure_services)
-        self.font_path = config.value_of("font_path") 
         self.last_ocr_result = None
         self.text_image_buffer = None
 
     def draw_text(self, frame, ratio, ocr_result):
+        self.font_path = config.value_of("font_path") 
         frame = Image.fromarray(frame)
         if self.last_ocr_result is not ocr_result:
             self.last_ocr_result = ocr_result
@@ -28,7 +28,7 @@ class OverlayText:
                         height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
                         
                         # 翻訳を実行
-                        translated_text = self.text_translator.translate(text, ocr_result.language)
+                        translated_text = self.text_translator.translate(text, "en")
 
                         font = self.get_optimum_sized_font(translated_text, width, height)
 

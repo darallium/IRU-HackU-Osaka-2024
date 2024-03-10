@@ -6,13 +6,16 @@ default_config = {
     "log_dir": "logs",
     "log_level": "DEBUG",
     "target_language": "ja", #https://learn.microsoft.com/ja-jp/azure/ai-services/translator/language-support
+    "ocr_method": "vision_read",
     "ocr_interval": 10,
     "ocr_read_operation_check_interval": 0.3,
-    "enable_datasaver": False, #resize
+    "enable_datasaver": False, #enable_resize
+    "camera_device_id": 0, #ラズパイでやるなら固定だと思いたい
     "debug_mode": False, #画面をフルスクリーンじゃなくて半分サイズのウィンドで表示
     "font_path": "C:\\Windows\\Fonts\\msgothic.ttc",
 }
 
 valid_values = {
     "log_level": ["FRAME", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    "ocr_method": ["vision_read", "vision_ocr", "document"],
 }
