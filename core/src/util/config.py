@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+import time
 import util.logger as logger
 from util.default_config import default_config
 
@@ -15,6 +17,8 @@ class Config:
         self.config = {}
         self.default_config = default_config
         self.load_config()
+        self.last_modified = os.path.getmtime(self.config_file)
+        self.check_config_updates()
 
     def load_config(self):
         if os.path.exists(self.config_file):
@@ -22,6 +26,7 @@ class Config:
                 self.config = json.load(f)
             self.validate_config()
         else:
+            logger.warning("Config file not found. Using default config.")
             self.config = self.default_config
             self.save_config()
 
@@ -36,7 +41,21 @@ class Config:
         with open(self.config_file, 'w') as f:
             json.dump(self.config, f)
 
+    def check_config_updates(self):
+        def target():
+            while True:
+                time.sleep(1)
+                if os.path.getmtime(self.config_file) != self.last_modified:
+                    logger.info("Config file updated. Reloading...")
+                    self.last_modified = os.path.getmtime(self.config_file)
+                    self.load_config()
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
 config = Config()
+
 
 def value_of(key):
     return config.config[key]
+    #config.config.get(key, default_value) にすればデフォルト値を返すようになる
