@@ -36,14 +36,18 @@ class Config:
             self.save_config()
 
     def validate_config(self):
+        is_valid = True
         for key, value in self.default_config.items():
             if key not in self.config or type(self.config[key]) != type(value):
                 print(f"Invalid config key: {key}. Using default value ;)")
                 self.config[key] = value
+                is_valid = False
             elif key in self.valid_values and self.config[key] not in self.valid_values[key]:
                 print(f"Invalid value for {key}: {self.config[key]}. Using default value ;)")
                 self.config[key] = value
-        self.save_config()
+                is_valid = False
+        if not is_valid:
+            self.save_config()
     
     def save_config(self):
         with open(self.config_file, 'w') as f:
