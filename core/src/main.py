@@ -50,6 +50,7 @@ def main():
         new_height = int(height * 0.5)
 
         # 画像のリサイズ
+        
         frame = cv2.resize(frame, (new_width, new_height))
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
