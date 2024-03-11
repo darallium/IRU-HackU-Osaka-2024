@@ -13,10 +13,10 @@ class OverlayText:
         self.text_image_buffer = None
 
     def draw_text(self, frame, ratio, ocr_result):
-        self.text_translator.translate_ocr_result(ocr_result)
         self.font_path = config.value_of("font_path") 
         frame = Image.fromarray(frame)
         if self.last_ocr_result is not ocr_result:
+            self.text_translator.translate_ocr_result(ocr_result)
             self.last_ocr_result = ocr_result
             self.text_image_buffer = Image.new('RGBA', (frame.width, frame.height))
             if type(ocr_result) == self.azure_services.read_operation_result:
