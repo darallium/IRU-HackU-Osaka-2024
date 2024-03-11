@@ -42,8 +42,8 @@ class TextTranslator:
             translated_texts = self.azure_services.translator_client.translate(content=[InputTextItem(text=item[1]) for item in texts_to_translate], to=[self.target_language])
 
             # 翻訳結果をキャッシュに追加
-            for key, translated_text in zip(texts_to_translate, translated_texts):
-                self.translation_cache[key[0]] = translated_text.translations[0].text
+            for (key, _), translated_text in zip(texts_to_translate, translated_texts):
+                self.translation_cache[key] = translated_text.translations[0].text
 
         return
 
