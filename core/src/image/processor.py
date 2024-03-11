@@ -7,35 +7,42 @@ import time
 import asyncio
 import threading
 import util.logger as logger
+import util.config as config
 from PIL import Image, ImageFont, ImageDraw
 from image.overlay_text import OverlayText
+from image.text_ocr.vision_ocr import TextOcrVisionOcr
+from image.text_ocr.vision_read import TextOcrVisionRead
 
 class ImageProcessor:
-    def __init__(self, azure_services, ocr_class, enable_resize=False):
+    def __init__(self, azure_services):
         self.azure_services = azure_services
         self.overlay_text = OverlayText(self.azure_services)
         self.last_process_frame_time = 0
         self.last_ocr_result = None
-        self.ocr_instance = ocr_class(self.azure_services)
+        self.text_ocr_vision_ocr = TextOcrVisionOcr(self.azure_services)
+        self.text_ocr_vision_read = TextOcrVisionRead(self.azure_services)
         self.ocr_task = None
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
         self.thread.start()
-        self.enable_resize = enable_resize
 
     def start_loop(self, loop):
             asyncio.set_event_loop(loop)
             loop.run_forever()
 
     async def recognize_text(self, image_buffer):
-        return await self.ocr_instance.run(image_buffer)
+        if config.value_of("ocr_method") == "vision_read":
+            ocr_instance  = self.text_ocr_vision_read
+        elif config.value_of("ocr_method") == "vision_ocr":
+            ocr_instance  = self.text_ocr_vision_ocr
+        return await ocr_instance.run(image_buffer)
     
     def process_frame(self, frame):
         self.time_start = time.perf_counter()
         
         # 480pに縮小して画像をAzureのOCRサービスに送信
         ratio = 1.0
-        if self.enable_resize:
+        if config.value_of("enable_datasaver"):
             resized_frame, ratio, _ = self.resize_image(frame, (640, 480))
             logger.frame(f"image size: {ratio}")
         else:
@@ -46,7 +53,11 @@ class ImageProcessor:
 
         image_buffer = io.BufferedReader(io.BytesIO(buffer))
 
-        if self.time_start - self.last_process_frame_time >= 10:
+        if config.value_of("always_ocr") and not self.ocr_task:
+            self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
+            logger.info(f"new ocr task {self.ocr_task}")
+
+        if not config.value_of("always_ocr") and self.time_start - self.last_process_frame_time >= config.value_of("ocr_interval"):
             if self.ocr_task is not None:
                 logger.warning("old ocr task is not finished yet and will be canceled")
                 self.ocr_task.cancel()
@@ -82,3 +93,4 @@ class ImageProcessor:
         new_image[(dist[1] - new_size[1]) // 2 : (dist[1] - new_size[1]) // 2 + new_size[1], 
                   (dist[0] - new_size[0]) // 2 : (dist[0] - new_size[0]) // 2 + new_size[0]] = resized_image
         return new_image
+    

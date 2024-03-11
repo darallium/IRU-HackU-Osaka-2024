@@ -3,8 +3,7 @@ from image.azure_services import AzureServices
 from image.processor import ImageProcessor
 from audio.audio_processor import AudioProcessor
 
-from image.text_ocr.vision_ocr import TextOcrVisionOcr
-from image.text_ocr.vision_read import TextOcrVisionRead
+import util.config as config
 import util.logger as logger
 import cv2
 import numpy as np
@@ -14,19 +13,16 @@ import asyncio
 
 def main():
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-
     azure_services = AzureServices(
-        config['vision_key'],
-        config['vision_endpoint'],
-        config['translator_key'],
-        config['translator_endpoint']
+        config.value_of('vision_key'),
+        config.value_of('vision_endpoint'),
+        config.value_of('translator_key'),
+        config.value_of('translator_endpoint')
     )
 
-    image_processor = ImageProcessor(azure_services, TextOcrVisionOcr, enable_resize=False)
+    image_processor = ImageProcessor(azure_services)
     # audio_processor = AudioProcessor()
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(config.value_of("camera_device_id"))
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     width = 1920
     height = 1080
@@ -37,7 +33,6 @@ def main():
 
     # audio_processor.start()
 
-    #time.time()
     while True:
         time_start = time.perf_counter()
         ret, frame = cap.read()

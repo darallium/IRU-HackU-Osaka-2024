@@ -1,6 +1,7 @@
 import logging
 import os
 import datetime
+import util.config as config
 
 class Logger:
     _instance = None
@@ -11,10 +12,10 @@ class Logger:
             cls._instance = super(Logger, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, log_dir='logs', log_level=logging.DEBUG):
+    def __init__(self):
         self.log_format = '%(asctime)s [%(levelname)s] %(message)s'
-        self.log_dir = log_dir
-        self.log_level = log_level
+        self.log_dir = config.value_of('log_dir')
+        self.log_level = config.value_of('log_level')
         self._create_log_dir()
         self._configure_logger()
 

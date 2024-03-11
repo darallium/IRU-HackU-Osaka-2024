@@ -11,6 +11,8 @@ import sys
 import time
 import json
 import util.logger as logger
+import util.config as config
+
 
 class TextOcrVisionRead:
     def __init__(self, azure_services):
@@ -28,7 +30,7 @@ class TextOcrVisionRead:
             logger.debug(f"ocr operation status: {read_result.status}")
             if read_result.status not in ['notStarted', 'running']:
                 break
-            time.sleep(0.3)
+            time.sleep(config.value_of("ocr_read_operation_check_interval"))
 
         # Print the detected text, line by line
         if read_result.status == OperationStatusCodes.succeeded:
