@@ -53,7 +53,11 @@ class ImageProcessor:
 
         image_buffer = io.BufferedReader(io.BytesIO(buffer))
 
-        if self.time_start - self.last_process_frame_time >= config.value_of("ocr_interval"):
+        if config.value_of("always_ocr") and not self.ocr_task:
+            self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
+            logger.info(f"new ocr task {self.ocr_task}")
+
+        if not config.value_of("always_ocr") and self.time_start - self.last_process_frame_time >= config.value_of("ocr_interval"):
             if self.ocr_task is not None:
                 logger.warning("old ocr task is not finished yet and will be canceled")
                 self.ocr_task.cancel()

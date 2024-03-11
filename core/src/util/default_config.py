@@ -6,6 +6,7 @@ default_config = {
     "log_dir": "logs",
     "log_level": "DEBUG",
     "target_language": "ja", #https://learn.microsoft.com/ja-jp/azure/ai-services/translator/language-support
+    "always_ocr": False,    #無料版は毎分20回までとかの制限があるので非推奨
     "ocr_method": "vision_read",
     "ocr_interval": 10,
     "ocr_read_operation_check_interval": 0.3,
