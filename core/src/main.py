@@ -1,7 +1,7 @@
 # main.py
 from image.azure_services import AzureServices
 from image.processor import ImageProcessor
-from audio.audio_processor import AudioProcessor
+from audio.processor import AudioProcessor
 
 import util.config as config
 import util.logger as logger
@@ -21,7 +21,7 @@ def main():
     )
 
     image_processor = ImageProcessor(azure_services)
-    # audio_processor = AudioProcessor()
+    audio_processor = AudioProcessor()
     cap = cv2.VideoCapture(config.value_of("camera_device_id"))
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     width = 1920
@@ -31,7 +31,7 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     cap.set(cv2.CAP_PROP_FPS, FPS)
 
-    # audio_processor.start()
+    audio_processor.start()
 
     while True:
         time_start = time.perf_counter()
@@ -50,6 +50,7 @@ def main():
         new_height = int(height * 0.5)
 
         # 画像のリサイズ
+        
         frame = cv2.resize(frame, (new_width, new_height))
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -61,7 +62,7 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-    # audio_processor.stop()
+    audio_processor.stop()
 
 if __name__ == "__main__":
     main()

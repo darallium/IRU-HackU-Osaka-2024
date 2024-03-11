@@ -15,6 +15,9 @@ class TextTranslator:
         self.load_dictionary()
 
     def translate(self, text, source_language):
+        if source_language == self.target_language:
+            return text
+        
         self.target_language = config.value_of("target_language")
         key = f"{source_language}_{self.target_language}_{text}"
         if key in self.user_dictionary:
