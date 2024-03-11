@@ -14,6 +14,41 @@ class TextTranslator:
         self.load_cache()
         self.load_dictionary()
 
+    def translate_ocr_result(self, ocr_result):
+        self.target_language = config.value_of("target_language")
+        
+        # 翻訳するテキストのリストを初期化
+        texts_to_translate = []
+
+        if type(ocr_result) == self.azure_services.read_operation_result:
+            for read_results in ocr_result.analyze_result.read_results:
+                for line in read_results.lines:
+                    text = line.text  # テキストを取得
+                    key = f"en_{self.target_language}_{text}"
+                    # キャッシュが存在しない場合のみリストに追加
+                    if key not in self.translation_cache:
+                        texts_to_translate.append([key, text])
+        else:
+            for region in ocr_result.regions:
+                for line in region.lines:
+                    text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
+                    key = f"{ocr_result.language}_{self.target_language}_{text}"
+                    # キャッシュが存在しない場合のみリストに追加
+                    if key not in self.translation_cache:
+                        texts_to_translate.append([key, text])
+
+        if texts_to_translate:
+            # Azure Translateの上限に達するまで、または全てのテキストを翻訳する
+            translated_texts = self.azure_services.translator_client.translate(content=[InputTextItem(text=item[1]) for item in texts_to_translate], to=[self.target_language])
+
+            # 翻訳結果をキャッシュに追加
+            for key, translated_text in zip(texts_to_translate, translated_texts):
+                self.translation_cache[key[0]] = translated_text.translations[0].text
+
+        return
+
+
+
     def translate(self, text, source_language):
         if source_language == self.target_language:
             return text
@@ -26,6 +61,8 @@ class TextTranslator:
         elif key in self.translation_cache:
             logger.frame("Using translation cache.")
             return self.translation_cache[key]
+        
+        logger.warning(f"All text should be pre-cached, but {text} is not cached.")
 
         input_text_elements = [InputTextItem(text=text)]
 
