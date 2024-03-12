@@ -24,7 +24,6 @@ class OverlayText:
         loop.run_forever()
         
     async def prepare_image_cache(self, frame, ratio, ocr_result):
-        print("呼ばれたで")
         self.text_translator.translate_ocr_result(ocr_result)
         text_image = Image.new('RGBA', (frame.width, frame.height))
         if type(ocr_result) == self.azure_services.read_operation_result:
@@ -70,7 +69,6 @@ class OverlayText:
                     d = ImageDraw.Draw(text_image)
                     d.rectangle([(nl, nt), (nl + nw, nt + nh)], fill=(0, 0, 0, 100))
                     d.text((int(nl), int(nt)), translated_text, font=font, fill=(255, 255, 255, 255))
-        print("終わった屋で")
         return text_image
 
     def draw_text(self, frame, ratio, ocr_result):
