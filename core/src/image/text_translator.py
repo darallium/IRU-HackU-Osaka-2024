@@ -46,9 +46,7 @@ class TextTranslator:
                 self.translation_cache[key] = translated_text.translations[0].text
 
         return
-
-
-
+    
     def translate(self, text, source_language):
         if source_language == self.target_language:
             return text
