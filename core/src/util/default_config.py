@@ -15,7 +15,7 @@ default_config = {
     "debug_mode": False, #画面をフルスクリーンじゃなくて半分サイズのウィンドで表示
     "font_path": "C:\\Windows\\Fonts\\msgothic.ttc",
     "audio_channels": 2,
-    "audio_sample_rate": 44100,
+    "audio_sample_rate": 48000,
     "input_device_index": 0,
     "output_device_index": 1,
     "audio_buffer_size": 1024,
