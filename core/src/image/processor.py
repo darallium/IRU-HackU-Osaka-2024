@@ -17,6 +17,7 @@ class ImageProcessor:
     def __init__(self, azure_services):
         self.azure_services = azure_services
         self.overlay_text = OverlayText(self.azure_services)
+        self.time_start = time.perf_counter()
         self.last_process_frame_time = 0
         self.last_ocr_result = None
         self.text_ocr_vision_ocr = TextOcrVisionOcr(self.azure_services)
@@ -38,8 +39,6 @@ class ImageProcessor:
         return await ocr_instance.run(image_buffer)
     
     def process_frame(self, frame):
-        self.time_start = time.perf_counter()
-        
         # 480pに縮小して画像をAzureのOCRサービスに送信
         ratio = 1.0
         if config.value_of("enable_datasaver"):
@@ -56,6 +55,7 @@ class ImageProcessor:
         if config.value_of("always_ocr") and not self.ocr_task:
             self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
             logger.info(f"new ocr task {self.ocr_task}")
+            self.time_start = time.perf_counter()
 
         if not config.value_of("always_ocr") and self.time_start - self.last_process_frame_time >= config.value_of("ocr_interval"):
             if self.ocr_task is not None:
@@ -65,6 +65,7 @@ class ImageProcessor:
             self.last_process_frame_time = self.time_start
             self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
             logger.info(f"new ocr task {self.ocr_task}")
+            self.time_start = time.perf_counter()
 
         if self.ocr_task and self.ocr_task.done():
             ocr_result = self.ocr_task.result()
