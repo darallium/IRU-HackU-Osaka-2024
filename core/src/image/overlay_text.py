@@ -30,20 +30,21 @@ class OverlayText:
             for read_results in ocr_result.analyze_result.read_results:
                 for line in read_results.lines:
                     text = line.text  # テキストを取得
+
+                    # 翻訳を実行
+                    translated_text = self.text_translator.translate(text, "en")
+                    if translated_text[1] == config.value_of("target_language"):
+                        continue
+
                     boundingBox = [int(i) for i in line.bounding_box]  # バウンディングボックスを取得
                     pts1 = np.float32([[boundingBox[i] / ratio, boundingBox[i+1] / ratio] for i in range(0,8,2)])  # バウンディングボックスから座標を取得
                     width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
-                    
-                    # 翻訳を実行
-                    translated_text = self.text_translator.translate(text, "en")
-
-                    font = self.get_optimum_sized_font(translated_text, width, height)
-
+                    font = self.get_optimum_sized_font(translated_text[0], width, height)
                     # 翻訳したテキストを半透明の背景を持つバッファに描画
                     img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, 100))
                     d = ImageDraw.Draw(img)
-                    d.text((0,0), translated_text, font=font, fill=(255, 255, 255, 255))
+                    d.text((0,0), translated_text[0], font=font, fill=(255, 255, 255, 255))
                     img = np.array(img)
 
                     # 射影変換を用いてバッファを元の画像に描画
@@ -58,17 +59,17 @@ class OverlayText:
             for region in ocr_result.regions:
                 for line in region.lines:
                     text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
-                    left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
-                    nl, nt, nw, nh = [int(value / ratio) for value in [left, top, width, height]]
                     # 翻訳を実行
                     translated_text = self.text_translator.translate(text, ocr_result.language)
-
-                    font = self.get_optimum_sized_font(translated_text, nw, nh)
-
+                    if translated_text[1] == config.value_of("target_language"):
+                        continue
+                    left, top, width, height = [int(value) for value in line.bounding_box.split(",")]  # 文章全体のバウンディングボックスを取得
+                    nl, nt, nw, nh = [int(value / ratio) for value in [left, top, width, height]]
+                    font = self.get_optimum_sized_font(translated_text[0], nw, nh)
                     # 翻訳したテキストを半透明の背景を持つバッファに描画
                     d = ImageDraw.Draw(text_image)
                     d.rectangle([(nl, nt), (nl + nw, nt + nh)], fill=(0, 0, 0, 100))
-                    d.text((int(nl), int(nt)), translated_text, font=font, fill=(255, 255, 255, 255))
+                    d.text((int(nl), int(nt)), translated_text[0], font=font, fill=(255, 255, 255, 255))
         return text_image
 
     def draw_text(self, frame, ratio, ocr_result):

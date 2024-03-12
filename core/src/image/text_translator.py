@@ -43,16 +43,18 @@ class TextTranslator:
 
             # 翻訳結果をキャッシュに追加
             for (key, _), translated_text in zip(texts_to_translate, translated_texts):
-                self.translation_cache[key] = translated_text.translations[0].text
-
+                self.translation_cache[key] = (translated_text.translations[0].text, translated_text.detected_language.language)
+                logger.info(f"Translator: key:'{key}' detected_language:'{self.translation_cache[key][1]}' translated_text:'{self.translation_cache[key][0]}'")
+            self.save_cache()
         return
     
     def translate(self, text, source_language):
-        if source_language == self.target_language:
-            return text
-        
         self.target_language = config.value_of("target_language")
-        key = f"{source_language}_{self.target_language}_{text}"
+        key = f"{self.target_language}_{text}"
+
+        if source_language == self.target_language:
+            return (text, source_language)
+        
         if key in self.user_dictionary:
             logger.frame("Using user dictionary.")
             return self.user_dictionary[key]
@@ -69,12 +71,10 @@ class TextTranslator:
         if translation:
             for translated_text in translation.translations:
                 logger.info(f"'{text}' was translated to: '{translated_text.to}' and the result is: '{translated_text.text}'.")
-                translated_text = translated_text.text
-
-        self.translation_cache[key] = translated_text
+                self.translation_cache[key] = (translated_text.text, translation.detected_language.language)
         self.save_cache()
 
-        return translated_text
+        return self.translation_cache[key]
 
     def add_to_dictionary(self, source_language, text, translation):
         key = f"{source_language}_{self.target_language}_{text}"
