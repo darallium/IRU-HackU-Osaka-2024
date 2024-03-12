@@ -24,7 +24,7 @@ class TextTranslator:
             for read_results in ocr_result.analyze_result.read_results:
                 for line in read_results.lines:
                     text = line.text  # テキストを取得
-                    key = f"en_{self.target_language}_{text}"
+                    key = f"{self.target_language}_{text}"
                     # キャッシュが存在しない場合のみリストに追加
                     if key not in self.translation_cache:
                         texts_to_translate.append([key, text])
@@ -32,7 +32,7 @@ class TextTranslator:
             for region in ocr_result.regions:
                 for line in region.lines:
                     text = ' '.join([word.text for word in line.words])  # 単語を一文に結合
-                    key = f"{ocr_result.language}_{self.target_language}_{text}"
+                    key = f"{self.target_language}_{text}"
                     # キャッシュが存在しない場合のみリストに追加
                     if key not in self.translation_cache:
                         texts_to_translate.append([key, text])
