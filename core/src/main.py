@@ -1,4 +1,5 @@
 # main.py
+from hardware.button import Button
 from image.azure_services import AzureServices
 from image.processor import ImageProcessor
 from util.font import download_font
@@ -11,6 +12,8 @@ import os
 def main():
 
     download_font()
+
+    hardware_button = Button(18)
 
     azure_services = AzureServices(
         config.value_of('vision_key'),
@@ -49,8 +52,9 @@ def main():
         ret, frame = cap.read()
         if not ret:
             break
-
-        frame = image_processor.process_frame(frame)
+        
+        if hardware_button.is_pushed():
+            frame = image_processor.process_frame(frame)
         
         if config.value_of("debug_mode"):
             # デバッグのために表示画面のサイズは半分にする
