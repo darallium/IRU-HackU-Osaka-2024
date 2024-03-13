@@ -13,8 +13,8 @@ default_config = {
     "enable_datasaver": False, #enable_resize
     "camera_device_id": 0, #ラズパイでやるなら固定だと思いたい
     "debug_mode": False, #画面をフルスクリーンじゃなくて半分サイズのウィンドで表示
-    "font_url": "https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/JP/SourceHanSansJP-Regular.otf",
-    "font_path": "fonts/SourceHanSansJP-Regular.otf",
+    "font_url": "https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/JP/SourceHanSansJP-Medium.otf",
+    "font_path": "fonts/SourceHanSansJP-Medium.otf",
     "overlay_alpha": 200,
     "audio_channels": 2,
     "audio_sample_rate": 48000,
