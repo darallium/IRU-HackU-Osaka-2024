@@ -1,7 +1,7 @@
 # main.py
 from image.azure_services import AzureServices
 from image.processor import ImageProcessor
-
+from util.font import download_font
 import util.config as config
 import util.logger as logger
 import cv2
@@ -10,6 +10,8 @@ import os
 
 def main():
 
+    download_font()
+    
     azure_services = AzureServices(
         config.value_of('vision_key'),
         config.value_of('vision_endpoint'),
@@ -33,8 +35,6 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     cap.set(cv2.CAP_PROP_FPS, FPS)
-
-    
 
     if config.value_of("debug_mode"):
         cv2.namedWindow("HDMagIc")
