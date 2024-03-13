@@ -1,0 +1,34 @@
+[project]
+name = "core"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "darallium", email = "annihilation0504@gmail.com" }
+]
+dependencies = [
+    "pyaudio>=0.2.14",
+    "azure-mgmt-cognitiveservices>=13.5.0",
+    "azure-mgmt-authorization>=4.0.0",
+    "Pillow>=10.2.0",
+    "azure-cognitiveservices-vision-computervision>=0.9.0",
+    "azure-ai-ml>=1.13.0",
+    "azure_ai_translation_text @ https://files.pythonhosted.org/packages/42/ed/6752793aba2150f3841dcad6b1a4ecfda22f7610314bdb1f078c48338aa3/azure_ai_translation_text-1.0.0b1-py3-none-any.whl",
+    "opencv-python>=4.9.0.80",
+    "opencv-contrib-python>=4.9.0.80",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/core"]
