@@ -166,6 +166,7 @@ _*.py
 *.png
 translation_cache.json
 user_dictionary.json
+fonts/
 
 # Credentials
 config.json
