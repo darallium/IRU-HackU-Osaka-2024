@@ -21,10 +21,14 @@ class AudioProcessor:
         while True:
             self.process = subprocess.Popen(f'arecord -f {format} -r {rate} -c {channels} - | aplay -', shell=True)
             while True:
-                # コマンドの終了を確認
-                if self.process.poll() is not None:
-                    logger.error("Audio process has terminated, restarting...")
-                    break
+                try:
+                    # コマンドの終了を確認
+                    if self.process.poll() is not None:
+                        logger.error("Audio process has terminated, restarting...")
+                        break
+                except:
+                    print("Audio Error!!!")
+                    exit(0)
                 time.sleep(1)
 
             # 標準出力とエラーを取得
