@@ -6,7 +6,7 @@ import numpy as np
 import util.logger as logger
 import util.config as config
 from image.text_translator import TextTranslator
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 class OverlayText:
     def __init__(self, azure_services):
@@ -42,7 +42,7 @@ class OverlayText:
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
                     font = self.get_optimum_sized_font(translated_text[0], width, height)
                     # 翻訳したテキストを半透明の背景を持つバッファに描画
-                    img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, 100))
+                    img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, config.value_of("overlay_alpha")))
                     d = ImageDraw.Draw(img)
                     d.text((0,0), translated_text[0], font=font, fill=(255, 255, 255, 255))
                     img = np.array(img)
@@ -68,7 +68,7 @@ class OverlayText:
                     font = self.get_optimum_sized_font(translated_text[0], nw, nh)
                     # 翻訳したテキストを半透明の背景を持つバッファに描画
                     d = ImageDraw.Draw(text_image)
-                    d.rectangle([(nl, nt), (nl + nw, nt + nh)], fill=(0, 0, 0, 100))
+                    d.rectangle([(nl, nt), (nl + nw, nt + nh)], fill=(0, 0, 0, config.value_of("overlay_alpha")))
                     d.text((int(nl), int(nt)), translated_text[0], font=font, fill=(255, 255, 255, 255))
         return text_image
 
