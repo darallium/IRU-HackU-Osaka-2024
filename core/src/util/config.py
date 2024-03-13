@@ -15,8 +15,10 @@ class Config:
         self.config_file = config_file
         self.config = {}
         self.valid_values = valid_values
-        self.default_config = default_config
-        self.default_config_linux = default_config_linux
+        if os.name == 'nt':
+            self.default_config = default_config
+        else:
+            self.default_config = {**default_config, **default_config_linux}
         self.load_config()
         self.last_modified = os.path.getmtime(self.config_file)
         self.check_config_updates()
@@ -28,10 +30,7 @@ class Config:
             self.validate_config()
         else:
             print("Config file not found. Using default config.")
-            if os.name == 'nt':
-                self.config = self.default_config
-            else:
-                self.config = {**self.default_config, **self.default_config_linux}
+            self.config = self.default_config
 
             self.save_config()
 
