@@ -47,7 +47,6 @@ pycparser==2.21
 pydash==7.0.5
 PyJWT==2.8.0
 python-dateutil==2.9.0.post0
-pywin32==306
 PyYAML==6.0.1
 referencing==0.33.0
 requests==2.31.0

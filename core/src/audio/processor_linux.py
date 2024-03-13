@@ -19,7 +19,7 @@ class AudioProcessor:
         output_device = config.value_of("output_device")
         
         while True:
-            self.process = subprocess.Popen(f'arecord -f {format} -r {rate} -c {channels} - | aplay -D {output_device} -', shell=True)
+            self.process = subprocess.Popen(f'arecord -f {format} -r {rate} -c {channels} - | aplay -', shell=True)
             while True:
                 # コマンドの終了を確認
                 if self.process.poll() is not None:

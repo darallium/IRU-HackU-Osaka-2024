@@ -23,6 +23,7 @@ class ImageProcessor:
         self.text_ocr_vision_ocr = TextOcrVisionOcr(self.azure_services)
         self.text_ocr_vision_read = TextOcrVisionRead(self.azure_services)
         self.ocr_task = None
+        self.overlay_cache = None
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
         self.thread.start()
@@ -31,16 +32,7 @@ class ImageProcessor:
             asyncio.set_event_loop(loop)
             loop.run_forever()
 
-    async def recognize_text(self, image_buffer):
-        if config.value_of("ocr_method") == "vision_read":
-            ocr_instance  = self.text_ocr_vision_read
-        elif config.value_of("ocr_method") == "vision_ocr":
-            ocr_instance  = self.text_ocr_vision_ocr
-        return await ocr_instance.run(image_buffer)
-    
-    def process_frame(self, frame):
-        time_start = time.perf_counter()
-
+    async def prepare_overlay_cache(self, frame):
         # 480pに縮小して画像をAzureのOCRサービスに送信
         ratio = 1.0
         if config.value_of("enable_datasaver"):
@@ -49,13 +41,28 @@ class ImageProcessor:
         else:
             resized_frame = frame
 
-        # PNG形式に変換
         _, buffer = cv2.imencode(".png", resized_frame)
 
         image_buffer = io.BufferedReader(io.BytesIO(buffer))
 
+        if config.value_of("ocr_method") == "vision_read":
+            ocr_instance  = self.text_ocr_vision_read
+        elif config.value_of("ocr_method") == "vision_ocr":
+            ocr_instance  = self.text_ocr_vision_ocr
+            
+        ocr_result = await ocr_instance.run(image_buffer)
+        return self.overlay_text.draw_text(frame, ratio, ocr_result)
+    
+    def process_frame(self, frame):
+        time_start = time.perf_counter()
+
+        
+
+        # PNG形式に変換
+        
+
         if config.value_of("always_ocr") and not self.ocr_task:
-            self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
+            self.ocr_task = asyncio.run_coroutine_threadsafe(self.prepare_overlay_cache(frame), self.loop)
             logger.info(f"new ocr task {self.ocr_task}")
             self.task_time_start = time.perf_counter()
 
@@ -65,25 +72,23 @@ class ImageProcessor:
                 logger.warning("old ocr task is not finished yet and will be canceled")
                 self.ocr_task.cancel()
 
-            if not self.ocr_task or (self.ocr_task and not self.ocr_task.done()):
+            if not self.ocr_task or (self.ocr_task and self.ocr_task.done()):
                 self.last_process_frame_time = time_start
-                self.ocr_task = asyncio.run_coroutine_threadsafe(self.recognize_text(image_buffer), self.loop)
+                self.ocr_task = asyncio.run_coroutine_threadsafe(self.prepare_overlay_cache(frame), self.loop)
                 logger.info(f"new ocr task {self.ocr_task}")
                 self.task_time_start = time.perf_counter()
             
 
         if self.ocr_task and self.ocr_task.done():
-            ocr_result = self.ocr_task.result()
-            self.last_ocr_result = ocr_result
+            self.overlay_cache = self.ocr_task.result()
             time_end = time.perf_counter()
             logger.info(f"ocr cost {time_end- self.task_time_start}s")
-            logger.debug(ocr_result)
             self.ocr_task = None
-        else:
-            ocr_result = self.last_ocr_result
 
-        if ocr_result:
-            frame = self.overlay_text.draw_text(frame, ratio, ocr_result)
+        if self.overlay_cache is not None:
+            frame = Image.fromarray(frame)
+            frame = Image.alpha_composite(frame.convert('RGBA'), self.overlay_cache)
+            frame = np.array(frame)
 
         return frame
     

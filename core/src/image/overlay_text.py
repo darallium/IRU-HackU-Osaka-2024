@@ -15,17 +15,14 @@ class OverlayText:
         self.last_ocr_result = None
         self.text_image_buffer = None
         self.image_cache_task = None
-        self.loop = asyncio.new_event_loop()
-        self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
-        self.thread.start()
 
     def start_loop(self, loop):
         asyncio.set_event_loop(loop)
         loop.run_forever()
         
-    async def prepare_image_cache(self, frame, ratio, ocr_result):
+    def prepare_image_cache(self, frame, ratio, ocr_result):
         self.text_translator.translate_ocr_result(ocr_result)
-        text_image = Image.new('RGBA', (frame.width, frame.height))
+        text_image = Image.new('RGBA', (frame.shape[1], frame.shape[0]))
         if type(ocr_result) == self.azure_services.read_operation_result:
             for read_results in ocr_result.analyze_result.read_results:
                 for line in read_results.lines:
@@ -36,25 +33,35 @@ class OverlayText:
                     if translated_text[1] == config.value_of("target_language"):
                         continue
 
-                    boundingBox = [int(i) for i in line.bounding_box]  # バウンディングボックスを取得
+                    boundingBox = line.bounding_box#[int(i) for i in line.bounding_box]  # バウンディングボックスを取得
                     pts1 = np.float32([[boundingBox[i] / ratio, boundingBox[i+1] / ratio] for i in range(0,8,2)])  # バウンディングボックスから座標を取得
-                    width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
+                    # width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
-                    font = self.get_optimum_sized_font(translated_text[0], width, height)
+                    font = ImageFont.truetype(self.font_path, height) #self.get_optimum_sized_font(translated_text[0], width, height)
+                    """
                     # 翻訳したテキストを半透明の背景を持つバッファに描画
                     img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, config.value_of("overlay_alpha")))
                     d = ImageDraw.Draw(img)
-                    d.text((0,0), translated_text[0], font=font, fill=(255, 255, 255, 255))
-                    img = np.array(img)
-
+                    d.text((boundingBox[0],boundingBox[1]), translated_text[0], font=font, fill=(255, 255, 255, 255))
+                    #img = np.array(img)
+                    
                     # 射影変換を用いてバッファを元の画像に描画
                     pts2 = np.float32([[0,0],[width,0],[width,height],[0,height]])
                     M = cv2.getPerspectiveTransform(pts2, pts1)
                     dst = cv2.warpPerspective(img, M, (frame.width, frame.height))
                     
+                    
                     # 元の画像とdstを合成
-                    dst = Image.fromarray(dst)
-                    text_image = Image.alpha_composite(text_image.convert('RGBA'), dst)
+                    #dst = Image.fromarray(dst)
+                    text_image = Image.alpha_composite(text_image.convert('RGBA'), img)
+                    """
+                    d = ImageDraw.Draw(text_image)
+                    if boundingBox[0] < boundingBox[4] and boundingBox[1] < boundingBox[5]:
+                        d.rectangle([(boundingBox[0],boundingBox[1]), (boundingBox[4],boundingBox[5])], fill=(0, 0, 0))
+                    elif boundingBox[0] > boundingBox[4] and boundingBox[1] > boundingBox[5]:
+                        d.rectangle([(boundingBox[4],boundingBox[5]), (boundingBox[0],boundingBox[1])], fill=(0, 0, 0))
+
+                    d.text((boundingBox[0],boundingBox[1]), translated_text[0], font=font, fill=(255, 255, 255))
         else:
             for region in ocr_result.regions:
                 for line in region.lines:
@@ -74,32 +81,13 @@ class OverlayText:
 
     def draw_text(self, frame, ratio, ocr_result):
         self.font_path = config.value_of("font_path") 
-        frame = Image.fromarray(frame)
-        if self.last_ocr_result is not ocr_result:
-            if self.image_cache_task is not None:
-                logger.warning("old overlay task is not finished yet and will be canceled")
-                self.image_cache_task.cancel()
 
-            self.last_ocr_result = ocr_result
-            self.image_cache_task = asyncio.run_coroutine_threadsafe(self.prepare_image_cache(frame, ratio, ocr_result), self.loop)
-            self.time_start = time.perf_counter()
-            logger.info(f"new overlay task {self.image_cache_task}")
-
-        if self.image_cache_task and self.image_cache_task.done():
-            self.text_image_buffer = self.image_cache_task.result()
-            time_end = time.perf_counter()
-            logger.info(f"prepare overlay cost {time_end- self.time_start}s")
-            self.image_cache_task = None
-
-        if self.text_image_buffer:
-            frame = Image.alpha_composite(frame.convert('RGBA'), self.text_image_buffer)
-
-        frame = np.array(frame)
-        return frame
+        return self.prepare_image_cache(frame, ratio, ocr_result)
+    
         
     def get_optimum_sized_font(self, text, width, height):
         font = ImageFont.truetype(self.font_path, height)
-        img_dummy = Image.new('RGBA', (1, 1))
+        img_dummy = Image.new('RGB', (1, 1))
         d_dummy = ImageDraw.Draw(img_dummy)
         bbox = d_dummy.textbbox((0, 0), text, font=font)
         if bbox[2] > width or bbox[3] > height:
