@@ -11,7 +11,7 @@ import os
 def main():
 
     download_font()
-    
+
     azure_services = AzureServices(
         config.value_of('vision_key'),
         config.value_of('vision_endpoint'),

@@ -102,14 +102,19 @@ class OverlayText:
         img_dummy = Image.new('RGBA', (1, 1))
         d_dummy = ImageDraw.Draw(img_dummy)
         bbox = d_dummy.textbbox((0, 0), text, font=font)
-        if bbox[2] > width:
+        if bbox[2] > width or bbox[3] > height:
             low, high = 1, height
             while low <= high:
                 mid = (low + high) // 2
                 font = ImageFont.truetype(self.font_path, mid)
                 bbox = d_dummy.textbbox((0, 0), text, font=font)
-                if bbox[2] <= width:
+                if bbox[2] <= width and bbox[3] <= height:
                     low = mid + 1
                 else:
                     high = mid - 1
+                    
+        if font.size < 12:
+            font = ImageFont.truetype(self.font_path, 12)
+            logger.warning(f"font size is too small: {font.size}->{text}")
+
         return font
