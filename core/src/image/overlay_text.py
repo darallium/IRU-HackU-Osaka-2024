@@ -39,12 +39,12 @@ class OverlayText:
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
                     font = ImageFont.truetype(self.font_path, height) #self.get_optimum_sized_font(translated_text[0], width, height)
                     d = ImageDraw.Draw(text_image)
-                    if pts1[0] < pts1[4] and pts1[1] < pts1[5]:
-                        d.rectangle([(pts1[0],pts1[1]), (pts1[4],pts1[5])], fill=(0, 0, 0))
-                    elif pts1[0] > pts1[4] and pts1[1] > pts1[5]:
-                        d.rectangle([(pts1[4],pts1[5]), (pts1[0],pts1[1])], fill=(0, 0, 0))
+                    if pts1[0][0] < pts1[2][0] and pts1[0][1] < pts1[2][1]:
+                        d.rectangle([(pts1[0][0], pts1[0][1]), (pts1[2][0], pts1[2][1])], fill=(0, 0, 0))
+                    elif pts1[0][0] > pts1[2][0] and pts1[0][1] > pts1[2][1]:
+                        d.rectangle([(pts1[2][0], pts1[2][1]),(pts1[0][0], pts1[0][1])], fill=(0, 0, 0))
 
-                    d.text((pts1[0],pts1[1]), translated_text[0], font=font, fill=(255, 255, 255))
+                    d.text((pts1[0]), translated_text[0], font=font, fill=(255, 255, 255))
         else:
             for region in ocr_result.regions:
                 for line in region.lines:
