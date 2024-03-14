@@ -38,30 +38,13 @@ class OverlayText:
                     # width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
                     font = ImageFont.truetype(self.font_path, height) #self.get_optimum_sized_font(translated_text[0], width, height)
-                    """
-                    # 翻訳したテキストを半透明の背景を持つバッファに描画
-                    img = Image.new('RGBA', (int(width), int(height)), (0, 0, 0, config.value_of("overlay_alpha")))
-                    d = ImageDraw.Draw(img)
-                    d.text((boundingBox[0],boundingBox[1]), translated_text[0], font=font, fill=(255, 255, 255, 255))
-                    #img = np.array(img)
-                    
-                    # 射影変換を用いてバッファを元の画像に描画
-                    pts2 = np.float32([[0,0],[width,0],[width,height],[0,height]])
-                    M = cv2.getPerspectiveTransform(pts2, pts1)
-                    dst = cv2.warpPerspective(img, M, (frame.width, frame.height))
-                    
-                    
-                    # 元の画像とdstを合成
-                    #dst = Image.fromarray(dst)
-                    text_image = Image.alpha_composite(text_image.convert('RGBA'), img)
-                    """
                     d = ImageDraw.Draw(text_image)
-                    if boundingBox[0] < boundingBox[4] and boundingBox[1] < boundingBox[5]:
-                        d.rectangle([(boundingBox[0],boundingBox[1]), (boundingBox[4],boundingBox[5])], fill=(0, 0, 0))
-                    elif boundingBox[0] > boundingBox[4] and boundingBox[1] > boundingBox[5]:
-                        d.rectangle([(boundingBox[4],boundingBox[5]), (boundingBox[0],boundingBox[1])], fill=(0, 0, 0))
+                    if pts1[0] < pts1[4] and pts1[1] < pts1[5]:
+                        d.rectangle([(pts1[0],pts1[1]), (pts1[4],pts1[5])], fill=(0, 0, 0))
+                    elif pts1[0] > pts1[4] and pts1[1] > pts1[5]:
+                        d.rectangle([(pts1[4],pts1[5]), (pts1[0],pts1[1])], fill=(0, 0, 0))
 
-                    d.text((boundingBox[0],boundingBox[1]), translated_text[0], font=font, fill=(255, 255, 255))
+                    d.text((pts1[0],pts1[1]), translated_text[0], font=font, fill=(255, 255, 255))
         else:
             for region in ocr_result.regions:
                 for line in region.lines:

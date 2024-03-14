@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 import io
-import traceback
-import json
 import time
 import asyncio
 import threading
@@ -55,12 +53,7 @@ class ImageProcessor:
     
     def process_frame(self, frame):
         time_start = time.perf_counter()
-
         
-
-        # PNG形式に変換
-        
-
         if config.value_of("always_ocr") and not self.ocr_task:
             self.ocr_task = asyncio.run_coroutine_threadsafe(self.prepare_overlay_cache(frame), self.loop)
             logger.info(f"new ocr task {self.ocr_task}")
@@ -78,7 +71,6 @@ class ImageProcessor:
                 logger.info(f"new ocr task {self.ocr_task}")
                 self.task_time_start = time.perf_counter()
             
-
         if self.ocr_task and self.ocr_task.done():
             self.overlay_cache = self.ocr_task.result()
             time_end = time.perf_counter()

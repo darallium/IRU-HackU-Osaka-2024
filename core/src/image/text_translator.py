@@ -76,13 +76,13 @@ class TextTranslator:
 
         return self.translation_cache[key]
 
-    def add_to_dictionary(self, source_language, text, translation):
-        key = f"{source_language}_{self.target_language}_{text}"
+    def add_to_dictionary(self, text, translation):
+        key = f"{self.target_language}_{text}"
         self.user_dictionary[key] = translation
         self.save_dictionary()
 
-    def remove_from_dictionary(self, source_language, text):
-        key = f"{source_language}_{self.target_language}_{text}"
+    def remove_from_dictionary(self, text):
+        key = f"{self.target_language}_{text}"
         if key in self.user_dictionary:
             del self.user_dictionary[key]
             self.save_dictionary()

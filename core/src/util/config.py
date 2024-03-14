@@ -61,7 +61,7 @@ class Config:
                     self.last_modified = os.path.getmtime(self.config_file)
                     self.load_config()
 
-        thread = threading.Thread(target=target)
+        thread = threading.Thread(target=target, daemon=True)
         thread.start()
 
 config = Config()

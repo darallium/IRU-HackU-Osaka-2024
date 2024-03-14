@@ -71,10 +71,14 @@ def main():
         time_end = time.perf_counter()
         time.sleep(max(1.0 / FPS - (time_end- time_start) / 1000, 0.0))
         
-
-    cap.release()
+    if cap is not None:
+        cap.release()
+    
+    if audio_processor is not None:
+        audio_processor.stop()
+        
     cv2.destroyAllWindows()
-    audio_processor.stop()
+    
 
 if __name__ == "__main__":
     main()
