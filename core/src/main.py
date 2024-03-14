@@ -46,9 +46,10 @@ def main():
         cv2.setWindowProperty("HDMagIc",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
 
     audio_processor.start()
+    WAIT_TIME_BASE = 1.0 / FPS
 
     while True:
-        time_start = time.perf_counter()
+        #time_start = time.perf_counter()
         ret, frame = cap.read()
         if not ret:
             break
@@ -68,8 +69,9 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        time_end = time.perf_counter()
-        time.sleep(max(1.0 / FPS - (time_end- time_start) / 1000, 0.0))
+        #time_end = time.perf_counter()
+        #logger.info(f"sleep: {WAIT_TIME_BASE-(time_end-time_start)}")
+        #time.sleep(max(WAIT_TIME_BASE - (time_end- time_start) / 1000, 0.0))
         
     if cap is not None:
         cap.release()

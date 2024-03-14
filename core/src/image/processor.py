@@ -31,10 +31,10 @@ class ImageProcessor:
             loop.run_forever()
 
     async def prepare_overlay_cache(self, frame):
-        # 480pに縮小して画像をAzureのOCRサービスに送信
+        # 540pに縮小して画像をAzureのOCRサービスに送信
         ratio = 1.0
         if config.value_of("enable_datasaver"):
-            resized_frame, ratio, _ = self.resize_image(frame, (640, 480))
+            resized_frame, ratio, _ = self.resize_image(frame, (960, 540))
             logger.frame(f"image size: {ratio}")
         else:
             resized_frame = frame

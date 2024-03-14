@@ -35,9 +35,9 @@ class OverlayText:
 
                     boundingBox = line.bounding_box#[int(i) for i in line.bounding_box]  # バウンディングボックスを取得
                     pts1 = np.float32([[boundingBox[i] / ratio, boundingBox[i+1] / ratio] for i in range(0,8,2)])  # バウンディングボックスから座標を取得
-                    # width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
+                    width = max(np.linalg.norm(pts1[i]-pts1[(i+2)%4]) for i in range(0,4,2))  # 幅を計算
                     height = max(np.linalg.norm(pts1[i]-pts1[(i+3)%4]) for i in range(0,4,2))  # 高さを計算
-                    font = ImageFont.truetype(self.font_path, height) #self.get_optimum_sized_font(translated_text[0], width, height)
+                    font = self.get_optimum_sized_font(translated_text[0], width, height)
                     d = ImageDraw.Draw(text_image)
                     if pts1[0][0] < pts1[2][0] and pts1[0][1] < pts1[2][1]:
                         d.rectangle([(pts1[0][0], pts1[0][1]), (pts1[2][0], pts1[2][1])], fill=(0, 0, 0))
