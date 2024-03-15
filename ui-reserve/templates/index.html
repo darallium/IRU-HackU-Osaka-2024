@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Config Editor</title>
+  <link id="theme-link" rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <style>
+    h1 {
+      font-size: 2.5em;
+      /* Adjust as needed */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="my-4">Config Editor</h1>
+    <button id="theme-button" class="btn btn-secondary mb-4">Switch to Dark Mode</button>
+    <form method="POST">
+      {% for key, value in data.items() %}
+      <div class="form-group">
+        <label for="{{ key }}" id="{{ key }}-label">{{ key }}</label>
+        <input type="text" class="form-control" id="{{ key }}" name="{{ key }}" value="{{ value }}">
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="submit" name="reset" class="btn btn-danger">Reset</button>
+    </form>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  <script>
+    const themeButton = document.getElementById('theme-button');
+    const themeLink = document.getElementById('theme-link');
+    const inputs = document.querySelectorAll('input');
+    const labels = document.querySelectorAll('label');
+
+    themeButton.addEventListener('click', function () {
+      if (themeLink.getAttribute('href') == 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css') {
+        themeLink.href = 'https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/darkly/bootstrap.min.css';
+        themeButton.textContent = 'Switch to Light Mode';
+        inputs.forEach(input => {
+          input.style.backgroundColor = '#2c3e50';
+          input.style.color = '#fff';
+        });
+        labels.forEach(label => {
+          label.style.color = '#fff';
+        });
+      } else {
+        themeLink.href = 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css';
+        themeButton.textContent = 'Switch to Dark Mode';
+        inputs.forEach(input => {
+          input.style.backgroundColor = '#fff';
+          input.style.color = '#000';
+        });
+        labels.forEach(label => {
+          label.style.color = '#000';
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
