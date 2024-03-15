@@ -1,3 +1,5 @@
+import os
+import signal
 import subprocess
 import time
 import threading
@@ -21,7 +23,7 @@ class AudioProcessor:
         output_device = config.value_of("output_device")
         
         while not self.is_stop:
-            self.process = subprocess.Popen(f'arecord -f {format} -r {rate} -c {channels} - | aplay -', shell=True)
+            self.process = subprocess.Popen(['arecord', '-f', format, '-r', rate, '-c', channels, '|', 'aplay', '-'], preexec_fn=os.setsid)
             while not self.is_stop:
                 print(f"{self.is_stop}")
                 try:
@@ -42,7 +44,7 @@ class AudioProcessor:
             stdout, stderr = self.process.communicate()
             print(f"{self.is_stop}")
             if self.is_stop:
-                self.process.kill()
+                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
 
             # 標準出力とエラーを表示
             logger.info("Audio process output:", stdout.decode())
@@ -52,7 +54,4 @@ class AudioProcessor:
     def stop(self):
         if self.process is not None:
             self.is_stop = True
-            kill = subprocess.Popen(f"kill -9 {self.process.pid}", shell=True)
-            self.process.kill()
-            self.process.terminate()
-            #self.process = None
+            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
