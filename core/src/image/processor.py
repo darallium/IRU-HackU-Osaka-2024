@@ -26,6 +26,9 @@ class ImageProcessor:
         self.thread = threading.Thread(target=self.start_loop, args=(self.loop,))
         self.thread.start()
 
+    def __del__(self):
+        self.loop.call_soon_threadsafe(self.loop.stop)
+        
     def start_loop(self, loop):
             asyncio.set_event_loop(loop)
             loop.run_forever()

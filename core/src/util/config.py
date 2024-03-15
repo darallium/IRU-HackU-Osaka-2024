@@ -6,9 +6,12 @@ from util.default_config import default_config, valid_values
 from util.default_config_linux import default_config_linux
 class Config:
     _instance = None
+    _lock = threading.Lock()
+
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(Config, cls).__new__(cls)
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super(Config, cls).__new__(cls)
         return cls._instance
 
     def __init__(self, config_file='config.json'):
@@ -23,6 +26,10 @@ class Config:
         self.last_modified = os.path.getmtime(self.config_file)
         self.check_config_updates()
 
+    def __del__(self):
+        self.stop_thread = True
+        self.thread.join()
+
     def load_config(self):
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r') as f:
@@ -31,7 +38,6 @@ class Config:
         else:
             print("Config file not found. Using default config.")
             self.config = self.default_config
-
             self.save_config()
 
     def validate_config(self):
@@ -54,15 +60,16 @@ class Config:
 
     def check_config_updates(self):
         def target():
-            while True:
+            while not self.stop_thread:
                 time.sleep(1)
                 if os.path.getmtime(self.config_file) != self.last_modified:
                     print("Config file updated. Reloading...")
                     self.last_modified = os.path.getmtime(self.config_file)
                     self.load_config()
 
-        thread = threading.Thread(target=target, daemon=True)
-        thread.start()
+        self.stop_thread = False
+        self.thread = threading.Thread(target=target, daemon=True)
+        self.thread.start()
 
 config = Config()
 
