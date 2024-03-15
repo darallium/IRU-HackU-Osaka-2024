@@ -50,9 +50,13 @@ def main():
 
     while True:
         #time_start = time.perf_counter()
-        ret, frame = cap.read()
-        if not ret:
-            break
+        try:
+            ret, frame = cap.read()
+            if not ret:
+                logger.error(f"Capture error: {ret}")
+                break
+        except:
+            print("error")
         
         if hardware_button.has_pushed():
             frame = image_processor.process_frame(frame)
