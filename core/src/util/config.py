@@ -76,3 +76,6 @@ config = Config()
 def value_of(key):
     return config.config[key]
     #config.config.get(key, default_value) にすればデフォルト値を返すようになる
+
+def release():
+    config.__del__()

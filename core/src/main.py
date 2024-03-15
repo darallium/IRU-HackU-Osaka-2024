@@ -80,6 +80,9 @@ def main():
         audio_processor.stop()
         
     cv2.destroyAllWindows()
+
+    config.release()
+    image_processor.__del__()
     
 if __name__ == "__main__":
     main()
