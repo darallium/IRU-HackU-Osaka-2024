@@ -1,3 +1,4 @@
+import re
 import json
 import util.logger as logger
 import util.config as config
@@ -94,7 +95,17 @@ class TextTranslator:
     def load_cache(self):
         try:
             with open(self.cache_file, 'r') as f:
-                self.translation_cache = json.load(f)
+                file_content = f.read()
+
+            self.translation_cache = json.loads(file_content)
+        except json.JSONDecodeError:
+                try:
+                    fixed_content = re.sub(r'([{,]\\s*)(\\w+)(\\s*:)', r'\\1\"\\2\"\\3', file_content)
+                    fixed_content = re.sub(r'(:\\s*)(\\w+)(\\s*[,}])', r'\\1\"\\2\"\\3', fixed_content)
+                    self.translation_cache = json.loads(fixed_content)
+                except json.JSONDecodeError:
+                    # これでも直せなかったら、負け。
+                    self.translation_cache = {}
         except FileNotFoundError:
             self.translation_cache = {}
 
