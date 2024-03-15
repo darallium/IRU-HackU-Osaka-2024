@@ -54,7 +54,7 @@ def main():
         if not ret:
             break
         
-        if hardware_button.is_pushed():
+        if hardware_button.has_pushed():
             frame = image_processor.process_frame(frame)
         
         if config.value_of("debug_mode"):

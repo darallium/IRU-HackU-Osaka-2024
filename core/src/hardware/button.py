@@ -1,15 +1,19 @@
-import gpiod
+import subprocess
+import time
+import os
+import select
+import signal
 
 class Button:
-    def __init__(self, GPIO_SW):
-        self.chip = gpiod.Chip("gpiochip4")
-        self.sw=self.chip.get_line(GPIO_SW)
-        self.sw.request(consumer="Button", type=gpiod.LINE_REQ_EV_RISING_EDGE, flags=8)
+    def __init__(self, offset) -> None:
+        self.offset = str(offset)
 
-    def is_pushed(self):
-        ev_lines = self.sw.event_wait(sec=0)
-        if ev_lines:
-            event = self.sw.event_read()
+    def has_pushed(self):
+        process = subprocess.Popen(['pinctrl', "get", self.offset], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if b' hi ' in stdout:
             return True
-        else:
+        elif b' lo ' in stdout:
             return False
+        else:
+            return None
