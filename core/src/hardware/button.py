@@ -18,4 +18,4 @@ class Button:
         elif b' lo ' in stdout:
             return False
         else:
-            return None
+            return True #ugokuka kowaikara torenakattara True
