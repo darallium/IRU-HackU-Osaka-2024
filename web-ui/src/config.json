@@ -1,0 +1,22 @@
+{
+  "vision_key": "default_vision_key",
+  "vision_endpoint": "default_vision_endpoint",
+  "translator_key": "default_translator_key",
+  "translator_endpoint": "https://api.cognitive.microsofttranslator.com/",
+  "log_dir": "logs",
+  "log_level": "DEBUG",
+  "target_language": "ja",
+  "always_ocr": false,
+  "ocr_method": "vision_read",
+  "ocr_interval": 10,
+  "ocr_read_operation_check_interval": 0.3,
+  "enable_datasaver": false,
+  "camera_device_id": 0,
+  "debug_mode": false,
+  "font_path": "C:\\Windows\\Fonts\\msgothic.ttc",
+  "audio_channels": 2,
+  "audio_sample_rate": 44100,
+  "input_device_index": 0,
+  "output_device_index": 1,
+  "audio_buffer_size": 1024
+}

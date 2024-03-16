@@ -10,7 +10,7 @@ import { DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, Dropdown
 import { CardTitle, CardDescription, CardHeader, CardContent, Card } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
 
-export function settings() {
+export function Settings() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex items-center h-16 px-4 border-b shrink-0 md:px-6">
