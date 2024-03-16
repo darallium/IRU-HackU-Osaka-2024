@@ -19,7 +19,7 @@
   "audio_format": "S16_LE",
   "audio_channels": 2,
   "audio_sample_rate": 48000,
-  "audio_buffer_size": 1024,
+  "audio_buffer_size": "1024",
   "font_url": "https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/JP/SourceHanSansJP-Medium.otf",
   "overlay_alpha": 200,
   "font_path": "fonts/SourceHanSansJP-Medium.otf"
